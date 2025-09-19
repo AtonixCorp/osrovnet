@@ -1,0 +1,65 @@
+/* Header container */
+.appbar-root {
+  background: linear-gradient(90deg, #0f1c2e 0%, #1a2a3f 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Logo and subtitle */
+.header-logo {
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.5px;
+}
+
+.header-subtitle {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* Navigation links */
+.nav-link {
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+  font-weight: 700;
+  border-bottom: 2px solid #00bfa5;
+}
+
+/* Auth buttons */
+.auth-button {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+}
+
+.auth-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Drawer styles */
+.drawer-content {
+  background-color: #1a2a3f;
+  color: #fff;
+  height: 100%;
+}
+
+.drawer-list-item {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.drawer-list-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}

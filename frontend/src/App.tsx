@@ -293,7 +293,7 @@ function AppContent() {
             </Box>
           </>
         ) : (
-          <Container sx={{ mt: 4 }}>
+          <Container maxWidth={false} disableGutters sx={{ mt: 4, px: 2 }}>
             {hash === '/login' && <Login />}
             {hash === '/signup' && <Signup />}
             {(hash === '' || hash === '/') && <Home />}

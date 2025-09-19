@@ -1,59 +1,109 @@
-/* Minimal styles for the HomePage component. Tweak as desired. */
+/* Security-themed homepage styles */
+
 .homepage-container {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 32px;
+  font-family: 'Roboto', 'Courier New', monospace;
+  background-color: #f0f4f8;
+  color: #1a1a1a;
 }
 
+/* Hero section with dark gradient and bold messaging */
 .hero-section {
   text-align: center;
-  padding: 40px 20px;
-  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
-  border-radius: 8px;
-  margin-bottom: 24px;
+  padding: 60px 30px;
+  background: linear-gradient(135deg, #0f1c2e 0%, #1a2a3f 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .hero-section h1 {
-  margin: 0 0 12px 0;
-  font-size: 2.25rem;
+  margin: 0 0 16px 0;
+  font-size: 2.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
+.hero-section p {
+  font-size: 1.1rem;
+  opacity: 0.85;
+}
+
+/* Call-to-action button */
 .cta-button {
   display: inline-block;
-  margin-top: 16px;
-  padding: 10px 18px;
-  background: #1976d2;
-  color: white;
-  border-radius: 6px;
+  margin-top: 24px;
+  padding: 12px 24px;
+  background: #00bfa5;
+  color: #fff;
+  border-radius: 8px;
   text-decoration: none;
+  font-weight: 600;
+  transition: background 0.3s ease;
 }
 
+.cta-button:hover {
+  background: #009e88;
+}
+
+/* Features section with modular blocks */
 .features-section {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
 }
 
 .feature-block {
-  background: #fff;
-  padding: 18px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(10,20,30,0.04);
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(10, 20, 30, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-block:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(10, 20, 30, 0.12);
 }
 
 .feature-block h3 {
   margin-top: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f1c2e;
 }
 
+.feature-block p {
+  font-size: 0.95rem;
+  color: #444;
+  margin-top: 8px;
+}
+
+/* Footer section with navigation */
 .footer-section {
-  margin-top: 28px;
-  padding-top: 12px;
+  margin-top: 48px;
+  padding-top: 24px;
   text-align: center;
+  font-size: 0.9rem;
+  color: #666;
 }
 
 .footer-section nav {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   justify-content: center;
-  margin-top: 6px;
+  margin-top: 12px;
+}
+
+.footer-section nav a {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer-section nav a:hover {
+  text-decoration: underline;
 }

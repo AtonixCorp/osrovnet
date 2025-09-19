@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useAuth } from '../auth/AuthProvider';
+import './Header.css';
 
 const navItems = [
   { label: 'Home', href: '#/' },
@@ -28,6 +29,39 @@ const navItems = [
   { label: 'Blog', href: '#/blog' },
   { label: 'Vulnerability', href: '#/vulnerabilities' },
 ];
+
+// Styles used by the header component. Kept outside the function so they can be
+// referenced directly from the JSX (sx={...}). navLink is a small factory that
+// returns a style object depending on whether the link is active.
+const headerStyles = {
+  appBar: {
+    // use theme tokens where possible; MUI will resolve these at render time
+    backgroundColor: 'primary.main',
+    color: 'common.white',
+  },
+  logo: {
+    fontWeight: 700,
+    letterSpacing: '0.5px',
+  },
+  subtitle: {
+    fontSize: '0.72rem',
+    opacity: 0.9,
+    lineHeight: 1,
+  },
+  navLink: (active: boolean) => ({
+    px: 1.25,
+    py: 0.5,
+    borderBottom: active ? '2px solid' : '2px solid transparent',
+    borderColor: active ? 'secondary.main' : 'transparent',
+    fontWeight: active ? 600 : 400,
+    transition: 'border-color 150ms ease',
+    '&:hover': { textDecoration: 'none', opacity: 0.9 },
+  }),
+  drawer: {
+    backgroundColor: 'background.paper',
+    height: '100%',
+  },
+};
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -45,14 +79,14 @@ export default function Header() {
   const toggleDrawer = (next: boolean) => () => setOpen(next);
 
   return (
-    <AppBar position="static" color="primary" sx={{ boxShadow: 'none' }}>
+    <AppBar position="static" sx={headerStyles.appBar}>
       <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="h6" sx={{ lineHeight: 1 }}>
+            <Typography variant="h6" sx={headerStyles.logo}>
               Osrovnet
             </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.9 }}>
+            <Typography variant="caption" sx={headerStyles.subtitle}>
               Network Security Platform
             </Typography>
           </Box>
@@ -68,7 +102,7 @@ export default function Header() {
                   href={it.href}
                   color="inherit"
                   underline="none"
-                  sx={{ mx: 1, fontSize: '0.95rem', fontWeight: active ? '700' : '400' }}
+                  sx={headerStyles.navLink(active)}
                 >
                   {it.label}
                 </MuiLink>
@@ -102,10 +136,15 @@ export default function Header() {
                 <MenuIcon />
               </IconButton>
               <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>
-                <Box sx={{ width: 260 }} role="presentation" onClick={toggleDrawer(false)}>
+                <Box sx={{ width: 260, ...headerStyles.drawer }} role="presentation" onClick={toggleDrawer(false)}>
                   <List>
                     {navItems.map((it) => (
-                      <ListItemButton component="a" href={it.href} key={it.href} selected={currentHash === it.href}>
+                      <ListItemButton
+                        component="a"
+                        href={it.href}
+                        key={it.href}
+                        selected={currentHash === it.href}
+                      >
                         <ListItemText primary={it.label} />
                       </ListItemButton>
                     ))}
@@ -113,11 +152,7 @@ export default function Header() {
                   <Divider />
                   <List>
                     {user ? (
-                      <ListItemButton
-                        onClick={() => {
-                          logout();
-                        }}
-                      >
+                      <ListItemButton onClick={() => logout()}>
                         <ListItemText primary="Logout" />
                       </ListItemButton>
                     ) : (

@@ -12,6 +12,7 @@ import {
 import GitHubIcon from '@mui/icons-material/GitHub';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import CodeIcon from '@mui/icons-material/Code';
+import './Footer.css';
 
 export default function Footer() {
   const theme = useTheme();
