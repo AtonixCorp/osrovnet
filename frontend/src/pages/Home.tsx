@@ -1,47 +1,67 @@
-import React, { useState } from 'react';
-import { Box, Typography, Paper, TextField, Button, Grid } from '@mui/material';
+import React from 'react';
+import './HomePage.css'; // Optional: for custom styling
 
-export default function Home() {
-  const [email, setEmail] = useState('');
-  const [msg, setMsg] = useState('');
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // For demo we'll store to localStorage as newsletter signups
-    const key = 'osrovnet_newsletter';
-    const raw = localStorage.getItem(key) || '[]';
-    const arr = JSON.parse(raw);
-    arr.push({ email, date: new Date().toISOString() });
-    localStorage.setItem(key, JSON.stringify(arr));
-    setMsg('Thanks! You are subscribed.');
-    setEmail('');
-  };
+const HomePage = () => {
+  // Home page is informational; newsletter handled in global Footer component.
 
   return (
-    <Box>
-      <Paper sx={{ p: 4, mb: 3 }}>
-        <Typography variant="h3" gutterBottom>Osrovnet – Network Security Platform</Typography>
-        <Typography variant="subtitle1" gutterBottom>
-          Osrovnet is AtonixCorp’s flagship solution for sovereign network defense, threat intelligence, and infrastructure resilience. Engineered for mission-critical environments and autonomous systems, Osrovnet empowers organizations to secure their digital perimeter with precision, insight, and operational control.
-        </Typography>
-        <Typography paragraph>
-          Built from the ground up for environments where compromise is not an option, Osrovnet combines real-time telemetry, adaptive threat response, and modular infrastructure monitoring into a unified platform. Whether deployed in offshore data centers, enterprise networks, or high-risk operational zones, Osrovnet delivers clarity where others offer noise—and autonomy where others demand dependence.
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <Typography variant="h6">Platform Capabilities</Typography>
-            <Typography>🛡️ Network Security, 🎯 Threat Intelligence, 🏗️ Infrastructure Resilience</Typography>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <form onSubmit={submit}>
-              <Typography variant="h6">Subscribe to Newsletter</Typography>
-              <TextField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} fullWidth />
-              <Button sx={{ mt: 1 }} type="submit" variant="contained">Subscribe</Button>
-              <Typography variant="caption" display="block">{msg}</Typography>
-            </form>
-          </Grid>
-        </Grid>
-      </Paper>
-    </Box>
+    <div className="homepage-container">
+      <header className="hero-section">
+        <h1>Osrovnet – Network Security Platform</h1>
+        <p>
+          AtonixCorp’s flagship solution for sovereign network defense, threat intelligence,
+          and infrastructure resilience. Built for mission-critical environments and autonomous systems.
+        </p>
+        <a href="#/" className="cta-button">Launch Dashboard</a>
+      </header>
+
+      <section className="features-section">
+        <h2>🚀 Platform Features</h2>
+
+        <div className="feature-block">
+          <h3>🛡️ Network Security</h3>
+          <ul>
+            <li>Real-time network monitoring and analysis</li>
+            <li>Advanced port scanning and vulnerability assessment</li>
+            <li>Network topology mapping and visualization</li>
+            <li>Intrusion detection and prevention systems</li>
+            <li>Traffic analysis and pattern recognition</li>
+          </ul>
+        </div>
+
+        <div className="feature-block">
+          <h3>🎯 Threat Intelligence</h3>
+          <ul>
+            <li>Real-time threat feed integration</li>
+            <li>IOC (Indicators of Compromise) management</li>
+            <li>Threat hunting and analysis tools</li>
+            <li>Automated threat response systems</li>
+            <li>Threat landscape visualization</li>
+          </ul>
+        </div>
+
+        <div className="feature-block">
+          <h3>🏗️ Infrastructure Resilience</h3>
+          <ul>
+            <li>Health Monitoring: CPU, memory, disk, and network</li>
+            <li>Automated Backup: Scheduled, encrypted backups</li>
+            <li>Disaster Recovery: Planning, testing, and execution</li>
+            <li>Maintenance Management: Change control and logs</li>
+            <li>Alerting System: Configurable alerts and escalation</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer className="footer-section">
+        <p>© {new Date().getFullYear()} AtonixCorp. All rights reserved.</p>
+        <nav>
+          <a href="#/documentation">Documentation</a>
+          <a href="#/support">Support</a>
+          <a href="#/login">Sign In</a>
+        </nav>
+      </footer>
+    </div>
   );
-}
+};
+
+export default HomePage;

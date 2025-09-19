@@ -24,6 +24,24 @@
   color: white;
 }
 
+/* Header navigation tweaks */
+.site-nav {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.site-nav a {
+  color: rgba(255,255,255,0.92);
+  text-decoration: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.site-nav a:hover {
+  background: rgba(255,255,255,0.04);
+}
+
 .App-link {
   color: #61dafb;
 }

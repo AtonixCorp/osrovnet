@@ -1,26 +1,138 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemText,
+  Box,
+  Divider,
+  useMediaQuery,
+  useTheme,
+  Link as MuiLink,
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import { useAuth } from '../auth/AuthProvider';
+
+const navItems = [
+  { label: 'Home', href: '#/' },
+  { label: 'Intelligence', href: '#/intelligence' },
+  { label: 'Support', href: '#/support' },
+  { label: 'Documentation', href: '#/documentation' },
+  { label: 'Community', href: '#/community' },
+  { label: 'Security', href: '#/security' },
+  { label: 'Blog', href: '#/blog' },
+  { label: 'Vulnerability', href: '#/vulnerabilities' },
+];
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const theme = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down('md'));
+  const [open, setOpen] = React.useState(false);
+  const [currentHash, setCurrentHash] = React.useState<string>(window.location.hash || '#/');
+
+  React.useEffect(() => {
+    const handler = () => setCurrentHash(window.location.hash || '#/');
+    window.addEventListener('hashchange', handler);
+    return () => window.removeEventListener('hashchange', handler);
+  }, []);
+
+  const toggleDrawer = (next: boolean) => () => setOpen(next);
+
   return (
-    <AppBar position="static">
-      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Box>
-          <Typography variant="h6">Osrovnet – Network Security Platform</Typography>
-          <Typography variant="caption">AtonixCorp</Typography>
+    <AppBar position="static" color="primary" sx={{ boxShadow: 'none' }}>
+      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="h6" sx={{ lineHeight: 1 }}>
+              Osrovnet
+            </Typography>
+            <Typography variant="caption" sx={{ opacity: 0.9 }}>
+              Network Security Platform
+            </Typography>
+          </Box>
         </Box>
-        <Box>
-          {user ? (
-            <>
-              <Button color="inherit" href="#/">Home</Button>
-              <Button color="inherit" onClick={() => logout()}>Logout</Button>
-            </>
+
+        {!isSmall && (
+          <Box component="nav" sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            {navItems.map((it) => {
+              const active = currentHash === it.href;
+              return (
+                <MuiLink
+                  key={it.href}
+                  href={it.href}
+                  color="inherit"
+                  underline="none"
+                  sx={{ mx: 1, fontSize: '0.95rem', fontWeight: active ? '700' : '400' }}
+                >
+                  {it.label}
+                </MuiLink>
+              );
+            })}
+          </Box>
+        )}
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {!isSmall ? (
+            user ? (
+              <>
+                <Button color="inherit" href="#/">Home</Button>
+                <Button color="inherit" onClick={() => logout()}>
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button color="inherit" href="#/login">
+                  Login
+                </Button>
+                <Button color="inherit" href="#/signup">
+                  Sign up
+                </Button>
+              </>
+            )
           ) : (
             <>
-              <Button color="inherit" href="#/login">Login</Button>
-              <Button color="inherit" href="#/signup">Sign up</Button>
+              <IconButton color="inherit" onClick={toggleDrawer(true)} edge="end">
+                <MenuIcon />
+              </IconButton>
+              <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>
+                <Box sx={{ width: 260 }} role="presentation" onClick={toggleDrawer(false)}>
+                  <List>
+                    {navItems.map((it) => (
+                      <ListItemButton component="a" href={it.href} key={it.href} selected={currentHash === it.href}>
+                        <ListItemText primary={it.label} />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                  <Divider />
+                  <List>
+                    {user ? (
+                      <ListItemButton
+                        onClick={() => {
+                          logout();
+                        }}
+                      >
+                        <ListItemText primary="Logout" />
+                      </ListItemButton>
+                    ) : (
+                      <>
+                        <ListItemButton component="a" href="#/login">
+                          <ListItemText primary="Login" />
+                        </ListItemButton>
+                        <ListItemButton component="a" href="#/signup">
+                          <ListItemText primary="Sign up" />
+                        </ListItemButton>
+                      </>
+                    )}
+                  </List>
+                </Box>
+              </Drawer>
             </>
           )}
         </Box>

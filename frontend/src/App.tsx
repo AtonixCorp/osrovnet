@@ -46,6 +46,12 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import Intelligence from './pages/Intelligence';
+import Support from './pages/Support';
+import Documentation from './pages/Documentation';
+import Community from './pages/Community';
+import Blog from './pages/Blog';
+import Vulnerabilities from './pages/Vulnerabilities';
 
 const theme = createTheme({
   palette: {
@@ -284,7 +290,13 @@ function AppContent() {
           <Container sx={{ mt: 4 }}>
             {hash === '/login' && <Login />}
             {hash === '/signup' && <Signup />}
-            {hash === '' && <Home />}
+            {(hash === '' || hash === '/') && <Home />}
+            {hash === '/intelligence' && <Intelligence />}
+            {hash === '/support' && <Support />}
+            {hash === '/documentation' && <Documentation />}
+            {hash === '/community' && <Community />}
+            {hash === '/blog' && <Blog />}
+            {hash === '/vulnerabilities' && <Vulnerabilities />}
           </Container>
         )}
       </Box>
