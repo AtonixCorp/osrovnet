@@ -26,7 +26,8 @@ FRONTEND_IMAGE = osrovnet-frontend:local
 # Build backend image (uses dockerfile in ./docker/Dockerfile.backend)
 build-backend:
 	@echo "Building backend image: $(BACKEND_IMAGE)"
-	nerdctl build -f docker/Dockerfile.backend -t $(BACKEND_IMAGE) .
+	# Use the backend directory as the build context so Dockerfile can COPY requirements.txt and project files
+	nerdctl build -f docker/Dockerfile.backend -t $(BACKEND_IMAGE) ./backend
 
 # Build frontend image (uses dockerfile in ./docker/Dockerfile.frontend)
 build-frontend:
