@@ -354,3 +354,179 @@ class ThreatResponseExecution(models.Model):
     
     def __str__(self):
         return f"{self.playbook.name} - {self.started_at}"
+
+class ThreatHuntingQuery(models.Model):
+    """Threat hunting queries and rules"""
+    
+    QUERY_TYPES = [
+        ('kql', 'Kusto Query Language'),
+        ('sql', 'SQL Query'),
+        ('elasticsearch', 'Elasticsearch Query'),
+        ('splunk', 'Splunk Search'),
+        ('yara', 'YARA Rule'),
+        ('sigma', 'Sigma Rule'),
+        ('regex', 'Regular Expression'),
+        ('custom', 'Custom Logic'),
+    ]
+    
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    query_type = models.CharField(max_length=20, choices=QUERY_TYPES)
+    query_content = models.TextField()
+    data_sources = models.JSONField(default=list)
+    threat_types = models.JSONField(default=list)
+    severity = models.CharField(max_length=10, choices=IndicatorOfCompromise.SEVERITY_LEVELS)
+    tags = models.JSONField(default=list)
+    false_positive_rate = models.FloatField(default=0.0)
+    effectiveness_score = models.IntegerField(default=50)
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_executed = models.DateTimeField(null=True, blank=True)
+    execution_count = models.IntegerField(default=0)
+    metadata = models.JSONField(default=dict)
+    
+    class Meta:
+        db_table = 'threat_hunting_queries'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.name
+
+class ThreatAnalysisSession(models.Model):
+    """Threat analysis sessions for deep dive investigations"""
+    
+    SESSION_STATUS = [
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('completed', 'Completed'),
+        ('archived', 'Archived'),
+    ]
+    
+    ANALYSIS_TYPES = [
+        ('malware', 'Malware Analysis'),
+        ('network', 'Network Analysis'),
+        ('behavioral', 'Behavioral Analysis'),
+        ('forensic', 'Digital Forensics'),
+        ('correlation', 'Threat Correlation'),
+        ('attribution', 'Threat Attribution'),
+    ]
+    
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    analysis_type = models.CharField(max_length=20, choices=ANALYSIS_TYPES)
+    status = models.CharField(max_length=20, choices=SESSION_STATUS, default='active')
+    analyst = models.ForeignKey(User, on_delete=models.CASCADE)
+    start_time = models.DateTimeField(auto_now_add=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    artifacts = models.JSONField(default=list)  # Files, samples, evidence
+    findings = models.TextField(blank=True)
+    conclusions = models.TextField(blank=True)
+    confidence_level = models.IntegerField(default=50)
+    related_iocs = models.ManyToManyField(IndicatorOfCompromise, related_name='analysis_sessions', blank=True)
+    related_actors = models.ManyToManyField(ThreatActor, related_name='analysis_sessions', blank=True)
+    related_campaigns = models.ManyToManyField(ThreatCampaign, related_name='analysis_sessions', blank=True)
+    tags = models.JSONField(default=list)
+    metadata = models.JSONField(default=dict)
+    
+    class Meta:
+        db_table = 'threat_analysis_sessions'
+        ordering = ['-start_time']
+    
+    def __str__(self):
+        return f"{self.name} - {self.analyst.username}"
+
+class ThreatVisualization(models.Model):
+    """Threat landscape visualization configurations"""
+    
+    VIZ_TYPES = [
+        ('threat_map', 'Threat Map'),
+        ('attack_timeline', 'Attack Timeline'),
+        ('actor_network', 'Actor Network'),
+        ('campaign_flow', 'Campaign Flow'),
+        ('ioc_relationships', 'IOC Relationships'),
+        ('threat_trends', 'Threat Trends'),
+        ('geographic_heatmap', 'Geographic Heatmap'),
+        ('kill_chain', 'Kill Chain Visualization'),
+    ]
+    
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    viz_type = models.CharField(max_length=20, choices=VIZ_TYPES)
+    config = models.JSONField(default=dict)  # Visualization configuration
+    data_query = models.TextField(blank=True)  # Query to fetch data
+    filters = models.JSONField(default=dict)  # Applied filters
+    time_range = models.JSONField(default=dict)  # Time range settings
+    refresh_interval = models.IntegerField(default=300)  # Seconds
+    is_public = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_accessed = models.DateTimeField(null=True, blank=True)
+    access_count = models.IntegerField(default=0)
+    
+    class Meta:
+        db_table = 'threat_visualizations'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.name
+
+class ThreatIntelligenceMetric(models.Model):
+    """Metrics for threat intelligence effectiveness"""
+    
+    METRIC_TYPES = [
+        ('detection_rate', 'Detection Rate'),
+        ('false_positive_rate', 'False Positive Rate'),
+        ('response_time', 'Response Time'),
+        ('threat_coverage', 'Threat Coverage'),
+        ('feed_quality', 'Feed Quality'),
+        ('analyst_productivity', 'Analyst Productivity'),
+    ]
+    
+    metric_type = models.CharField(max_length=30, choices=METRIC_TYPES)
+    metric_name = models.CharField(max_length=255)
+    value = models.FloatField()
+    unit = models.CharField(max_length=50, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    context = models.JSONField(default=dict)
+    feed = models.ForeignKey(ThreatFeed, on_delete=models.CASCADE, null=True, blank=True)
+    analyst = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    metadata = models.JSONField(default=dict)
+    
+    class Meta:
+        db_table = 'threat_intelligence_metrics'
+        indexes = [
+            models.Index(fields=['metric_type', 'timestamp']),
+            models.Index(fields=['feed', 'timestamp']),
+        ]
+    
+    def __str__(self):
+        return f"{self.metric_name}: {self.value} {self.unit}"
+
+class ThreatLandscapeSnapshot(models.Model):
+    """Periodic snapshots of the threat landscape"""
+    
+    snapshot_time = models.DateTimeField(auto_now_add=True)
+    total_iocs = models.IntegerField(default=0)
+    active_threats = models.IntegerField(default=0)
+    threat_actors = models.IntegerField(default=0)
+    active_campaigns = models.IntegerField(default=0)
+    critical_threats = models.IntegerField(default=0)
+    high_threats = models.IntegerField(default=0)
+    threat_distribution = models.JSONField(default=dict)  # By type, severity, etc.
+    geographic_distribution = models.JSONField(default=dict)
+    trending_threats = models.JSONField(default=list)
+    emerging_actors = models.JSONField(default=list)
+    feed_statistics = models.JSONField(default=dict)
+    detection_statistics = models.JSONField(default=dict)
+    response_statistics = models.JSONField(default=dict)
+    metadata = models.JSONField(default=dict)
+    
+    class Meta:
+        db_table = 'threat_landscape_snapshots'
+        ordering = ['-snapshot_time']
+    
+    def __str__(self):
+        return f"Threat Landscape - {self.snapshot_time.strftime('%Y-%m-%d %H:%M')}"

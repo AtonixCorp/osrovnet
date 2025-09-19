@@ -7,6 +7,7 @@ import {
   Toolbar,
   Typography,
   Box,
+  Grid,
   Drawer,
   List,
   ListItem,
@@ -26,6 +27,8 @@ import {
   TrendingUp
 } from '@mui/icons-material';
 import NetworkMonitoring from './components/NetworkMonitoring';
+import ActivitiesFeed from './components/ActivitiesFeed';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 const theme = createTheme({
   palette: {
@@ -146,16 +149,7 @@ function App() {
           </Box>
         );
       case 'analytics':
-        return (
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              Analytics
-            </Typography>
-            <Typography variant="body1">
-              Analytics and reporting features will be implemented here.
-            </Typography>
-          </Box>
-        );
+        return <AnalyticsPage />;
       case 'settings':
         return (
           <Box>
@@ -236,17 +230,28 @@ function App() {
         </Box>
         
         <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            p: 3,
-            width: { md: `calc(100% - ${drawerWidth}px)` },
-          }}
-        >
+            component="main"
+            sx={{
+              flexGrow: 1,
+              p: 3,
+              width: { md: `calc(100% - ${drawerWidth}px)` },
+            }}
+          >
           <Toolbar />
-          <Container maxWidth="xl">
-            {renderContent()}
-          </Container>
+            <Container maxWidth="xl">
+              {selectedSection === 'dashboard' ? (
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={8}>
+                    {renderContent()}
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ActivitiesFeed />
+                  </Grid>
+                </Grid>
+              ) : (
+                renderContent()
+              )}
+            </Container>
         </Box>
       </Box>
     </ThemeProvider>

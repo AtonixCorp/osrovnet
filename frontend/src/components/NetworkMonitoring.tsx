@@ -32,6 +32,8 @@ import {
   Add,
   PlayArrow
 } from '@mui/icons-material';
+import ScanResultsDialog from './ScanResultsDialog';
+import api from '../api/osrovnetApi';
 
 interface NetworkTarget {
   id: number;
@@ -102,41 +104,25 @@ const NetworkMonitoring: React.FC = () => {
     ports: '1-1000',
     name: ''
   });
-
-  const API_BASE = 'http://127.0.0.1:8000/api';
+  const [scanDialogOpen, setScanDialogOpen] = useState(false);
+  const [activeScanId, setActiveScanId] = useState<number | undefined>(undefined);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch dashboard statistics
-      const statsResponse = await fetch(`${API_BASE}/dashboard/statistics/`);
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setStats(statsData);
-      }
+      const statsData = await api.Analytics.metrics('dashboard/statistics/');
+      setStats(statsData);
 
-      // Fetch network overview
-      const overviewResponse = await fetch(`${API_BASE}/dashboard/overview/`);
-      if (overviewResponse.ok) {
-        const overviewData = await overviewResponse.json();
-        setOverview(overviewData);
-      }
+      const overviewData = await api.Analytics.metrics('dashboard/overview/');
+      setOverview(overviewData);
 
-      // Fetch targets
-      const targetsResponse = await fetch(`${API_BASE}/targets/`);
-      if (targetsResponse.ok) {
-        const targetsData = await targetsResponse.json();
-        setTargets(targetsData.results || targetsData);
-      }
+      const targetsData = await api.Targets.list();
+      setTargets(targetsData.results || targetsData || []);
 
-      // Fetch recent scans
-      const scansResponse = await fetch(`${API_BASE}/scans/?ordering=-started_at&limit=10`);
-      if (scansResponse.ok) {
-        const scansData = await scansResponse.json();
-        setScans(scansData.results || scansData);
-      }
+      const scansData = await api.Scans.list('?ordering=-started_at&limit=10');
+      setScans(scansData.results || scansData || []);
 
     } catch (err) {
       setError('Failed to fetch network monitoring data. Make sure the Django server is running.');
@@ -148,25 +134,26 @@ const NetworkMonitoring: React.FC = () => {
 
   const startQuickScan = async () => {
     try {
-      const response = await fetch(`${API_BASE}/quick-scan/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(quickScanData),
-      });
-
-      if (response.ok) {
-        setQuickScanDialog(false);
-        setQuickScanData({ target: '', scan_type: 'quick', ports: '1-1000', name: '' });
-        // Refresh data to show new scan
-        setTimeout(fetchData, 1000);
-      } else {
-        setError('Failed to start quick scan');
-      }
+      await api.QuickScan(quickScanData);
+      setQuickScanDialog(false);
+      setQuickScanData({ target: '', scan_type: 'quick', ports: '1-1000', name: '' });
+      setTimeout(fetchData, 1000);
     } catch (err) {
       setError('Failed to start quick scan');
       console.error('Quick scan error:', err);
+    }
+  };
+
+  const startTargetScan = async (targetId: number) => {
+    try {
+      const data = await api.Targets.startScan(targetId);
+      const scanId = data.id || data.scan_id;
+      setActiveScanId(scanId);
+      setScanDialogOpen(true);
+      setTimeout(fetchData, 1000);
+    } catch (err) {
+      console.error('startTargetScan error', err);
+      setError('Failed to start target scan');
     }
   };
 
@@ -439,6 +426,7 @@ const NetworkMonitoring: React.FC = () => {
                                 <Typography variant="caption">
                                   Scans: {target.scan_count}
                                 </Typography>
+                                <Button variant="outlined" size="small" onClick={() => startTargetScan(target.id)} sx={{ ml: 1 }}>Start Scan</Button>
                               </Box>
                             </Box>
                           }
@@ -512,6 +500,7 @@ const NetworkMonitoring: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <ScanResultsDialog open={scanDialogOpen} scanId={activeScanId} onClose={() => { setScanDialogOpen(false); setActiveScanId(undefined); }} />
     </Box>
   );
 };

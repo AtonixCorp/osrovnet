@@ -64,6 +64,9 @@ INSTALLED_APPS = [
     'network_security',
     'threat_intelligence',
     'infrastructure',
+    'analytics',
+    'advanced_analytics',
+    'security_analytics',
 ]
 
 MIDDLEWARE = [
