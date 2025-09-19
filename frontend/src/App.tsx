@@ -29,6 +29,16 @@ import {
 import NetworkMonitoring from './components/NetworkMonitoring';
 import ActivitiesFeed from './components/ActivitiesFeed';
 import AnalyticsPage from './pages/AnalyticsPage';
+import SettingsPage from './pages/SettingsPage';
+import OverviewPage from './pages/OverviewPage';
+import NetworkTargetsPage from './pages/NetworkTargetsPage';
+import ScanEnginePage from './pages/ScanEnginePage';
+import ThreatIntelligencePage from './pages/ThreatIntelligencePage';
+import TelemetryLogsPage from './pages/TelemetryLogsPage';
+import AnomalyDetectionPage from './pages/AnomalyDetectionPage';
+import ReportsAnalyticsPage from './pages/ReportsAnalyticsPage';
+import ComplianceCenterPage from './pages/ComplianceCenterPage';
+import IncidentResponsePage from './pages/IncidentResponsePage';
 import DemoControls from './components/DemoControls';
 
 const theme = createTheme({
@@ -55,10 +65,16 @@ function App() {
   };
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
+    { id: 'overview', label: 'Overview', icon: <Dashboard /> },
+    { id: 'network-targets', label: 'Network Targets', icon: <NetworkCheck /> },
+    { id: 'scan-engine', label: 'Scan Engine', icon: <Security /> },
     { id: 'monitoring', label: 'Network Monitoring', icon: <NetworkCheck /> },
-    { id: 'security', label: 'Security Analysis', icon: <Security /> },
-    { id: 'threats', label: 'Threat Intelligence', icon: <Assessment /> },
+    { id: 'threat-intel', label: 'Threat Intelligence', icon: <Assessment /> },
+    { id: 'telemetry', label: 'Telemetry & Logs', icon: <TrendingUp /> },
+    { id: 'anomaly', label: 'Anomaly Detection', icon: <Security /> },
+    { id: 'reports', label: 'Reports & Analytics', icon: <TrendingUp /> },
+    { id: 'compliance', label: 'Compliance Center', icon: <Assessment /> },
+    { id: 'incident', label: 'Incident Response', icon: <Security /> },
     { id: 'analytics', label: 'Analytics', icon: <TrendingUp /> },
     { id: 'settings', label: 'Settings', icon: <Settings /> },
   ];
@@ -95,6 +111,12 @@ function App() {
 
   const renderContent = () => {
     switch (selectedSection) {
+      case 'overview':
+        return <OverviewPage />;
+      case 'network-targets':
+        return <NetworkTargetsPage />;
+      case 'scan-engine':
+        return <ScanEnginePage />;
       case 'dashboard':
         return (
           <Box>
@@ -127,6 +149,18 @@ function App() {
         );
       case 'monitoring':
         return <NetworkMonitoring />;
+      case 'threat-intel':
+        return <ThreatIntelligencePage />;
+      case 'telemetry':
+        return <TelemetryLogsPage />;
+      case 'anomaly':
+        return <AnomalyDetectionPage />;
+      case 'reports':
+        return <ReportsAnalyticsPage />;
+      case 'compliance':
+        return <ComplianceCenterPage />;
+      case 'incident':
+        return <IncidentResponsePage />;
       case 'security':
         return (
           <Box>
@@ -155,16 +189,7 @@ function App() {
       case 'analytics':
         return <AnalyticsPage />;
       case 'settings':
-        return (
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              Settings
-            </Typography>
-            <Typography variant="body1">
-              Application settings will be implemented here.
-            </Typography>
-          </Box>
-        );
+        return <SettingsPage />;
       default:
         return (
           <Box>
