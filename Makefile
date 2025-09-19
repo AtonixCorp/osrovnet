@@ -40,6 +40,19 @@ build-root:
 	@echo "Building root image: osrovnet-root:local"
 	nerdctl build -f Dockerfile.root -t osrovnet-root:local .
 
+# Terminal web shell image (Debian + ttyd) - useful for iOS/Debian web terminal access
+build-terminal:
+	@echo "Building terminal image: osrovnet-terminal:local"
+	nerdctl build -f docker/terminal/Dockerfile -t osrovnet-terminal:local .
+
+run-terminal:
+	@echo "Running terminal (mapped to host port 7681)"
+	nerdctl run --rm -p 7681:7681 --name osrovnet-terminal osrovnet-terminal:local
+
+clean-terminal:
+	@echo "Removing terminal image if exists"
+	-nerdctl rmi osrovnet-terminal:local || true
+
 # Compose up (detached)
 up:
 	nerdctl compose -f $(COMPOSE_FILE) up -d --remove-orphans
