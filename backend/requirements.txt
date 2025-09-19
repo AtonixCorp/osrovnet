@@ -35,6 +35,7 @@ packaging==25.0
 pillow==11.3.0
 prompt_toolkit==3.0.52
 propcache==0.3.2
+psutil==5.9.9
 psycopg2-binary==2.9.10
 pycparser==2.23
 python-dateutil==2.9.0.post0

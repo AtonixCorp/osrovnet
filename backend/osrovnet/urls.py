@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('network_security.urls')),
     path('', include('threat_intelligence.urls')),
+    path('', include('infrastructure.urls')),
     path('', include('core.urls')),
 ]

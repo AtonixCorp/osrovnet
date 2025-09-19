@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'core',
     'network_security',
     'threat_intelligence',
+    'infrastructure',
 ]
 
 MIDDLEWARE = [
@@ -199,6 +200,10 @@ OSROVNET_CONFIG = {
     'MAXMIND_LICENSE_KEY': env('MAXMIND_LICENSE_KEY', default=''),
 }
 
+# Infrastructure Configuration
+BACKUP_ROOT = env('BACKUP_ROOT', default=BASE_DIR / 'backups')
+MONITORING_INTERVAL = env('MONITORING_INTERVAL', default=60)  # seconds
+
 # Logging Configuration
 LOGGING = {
     'version': 1,
@@ -243,6 +248,11 @@ LOGGING = {
             'propagate': True,
         },
         'threat_intelligence': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'infrastructure': {
             'handlers': ['file', 'console'],
             'level': 'DEBUG',
             'propagate': True,
