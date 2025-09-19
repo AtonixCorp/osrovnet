@@ -1,3 +1,60 @@
+########## Stage 1: Build frontend using Node ##########
+FROM node:18-alpine AS frontend-builder
+WORKDIR /frontend
+
+# Copy only package manifests first for better caching
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci --silent; else npm install --silent; fi
+
+# Copy the rest of the frontend source and build
+COPY frontend/ ./
+RUN npm run build --silent
+
+
+########## Stage 2: Build python runtime image ##########
+ARG PQC=false
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
+        postgresql-client \
+        nmap \
+    && rm -rf /var/lib/apt/lists/*
+
+# Optional: build and install liboqs when PQC is true
+RUN if [ "${PQC}" = "true" ]; then \
+      apt-get update && apt-get install -y --no-install-recommends git cmake libssl-dev libgmp-dev pkg-config && \
+      git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git /tmp/liboqs && \
+      mkdir -p /tmp/liboqs/build && cd /tmp/liboqs/build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j2 && make install && \
+      pip install --no-cache-dir python-oqs && rm -rf /tmp/liboqs && apt-get remove -y git cmake pkg-config && apt-get autoremove -y; \
+    fi
+
+# Copy requirements and install Python deps
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy project files
+COPY . /app/
+
+# Copy frontend build from builder stage into the image
+COPY --from=frontend-builder /frontend/build /app/frontend/build
+
+# Create logs directory
+RUN mkdir -p logs
+
+# Collect static files (best-effort during build)
+RUN python manage.py collectstatic --noinput || echo "collectstatic failed during image build"
+
+EXPOSE 8000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "osrovnet.wsgi:application"]
 # Osrovnet Backend Dockerfile
 ARG PQC=false
 FROM python:3.11-slim
@@ -35,11 +92,22 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . /app/
 
+# Build frontend assets into the image so Django can serve them (optional)
+RUN if [ -d "frontend" ]; then \
+            cd frontend && \
+            if [ -f package-lock.json ]; then npm ci --silent; else npm install --silent; fi && \
+            npm run build --silent && \
+            cp -R build /app/frontend/build; \
+        fi
+
 # Create logs directory
 RUN mkdir -p logs
 
 # Expose port
 EXPOSE 8000
+
+# Collect static files into STATIC_ROOT during image build so whitenoise can serve them
+RUN python manage.py collectstatic --noinput || echo "collectstatic failed - will try at runtime"
 
 # Run the application
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "osrovnet.wsgi:application"]

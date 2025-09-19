@@ -7,7 +7,8 @@
 
 type Json = any;
 
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000/api';
+// Default API base: in development we point to localhost backend; in production prefer same-origin '/api'
+const API_BASE = process.env.REACT_APP_API_BASE || (process.env.NODE_ENV === 'production' ? '/api' : 'http://127.0.0.1:8000/api');
 
 async function request(path: string, opts: RequestInit = {}) {
   const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
@@ -109,6 +110,12 @@ export const Advanced = {
   tamperLogs: (params = '') => request(`/advanced-analytics/tamper-logs/${params}`),
 };
 
+/* Quantum-Inspired Analytics */
+export const QuantumInspired = {
+  listTechniques: () => request('/api/quantum-inspired/techniques/'),
+  run: (payload: Json) => request('/api/quantum-inspired/run/', { method: 'POST', body: JSON.stringify(payload) }),
+};
+
 /* Security Analytics / ML endpoints */
 export const SecurityAnalytics = {
   detect: (modelId: number, payload: Json) => request(`/models/${modelId}/detect/`, { method: 'POST', body: JSON.stringify(payload) }),
@@ -152,4 +159,5 @@ export default {
   SIEM,
   VulnMgmt,
   SecurityAnalytics,
+  QuantumInspired,
 };

@@ -89,7 +89,9 @@ ROOT_URLCONF = 'osrovnet.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+            # Serve React's production build index.html when available. Frontend lives at repo root
+            # backend.BASE_DIR points at backend/, so the frontend is one level up at BASE_DIR.parent / 'frontend'
+            'DIRS': [(BASE_DIR.parent / 'frontend' / 'build')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -149,6 +151,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# If the frontend build exists, include its static files so Django can serve the SPA
+STATICFILES_DIRS = [
+    str(BASE_DIR.parent / 'frontend' / 'build' / 'static'),
+]
 
 # Media files
 MEDIA_URL = '/media/'

@@ -54,6 +54,7 @@ import Blog from './pages/Blog';
 import Vulnerabilities from './pages/Vulnerabilities';
 import SecurityPage from './pages/Security';
 import PostQuantumPage from './pages/PostQuantum';
+import QuantumInspiredPage from './pages/QuantumInspired';
 
 const theme = createTheme({
   palette: {
@@ -126,6 +127,7 @@ function AppContent() {
       '/terminal': 'terminal',
       '/api': 'api',
       '/settings': 'settings',
+      '/quantum-inspired': 'quantum-inspired',
     };
     if (map[hash]) {
       setSelectedSection(map[hash]);
@@ -159,6 +161,7 @@ function AppContent() {
     { id: 'compliance', label: 'Compliance Center', icon: <Assessment /> },
     { id: 'incident', label: 'Incident Response', icon: <Security /> },
     { id: 'analytics', label: 'Analytics', icon: <TrendingUp /> },
+  { id: 'quantum-inspired', label: 'Quantum-Inspired', icon: <Assessment /> },
     { id: 'ssh', label: 'SSH', icon: <NetworkCheck /> },
   { id: 'terminal', label: 'Terminal', icon: <NetworkCheck /> },
     { id: 'api', label: 'API', icon: <Assessment /> },
@@ -282,6 +285,8 @@ function AppContent() {
         return <APIPage />;
       case 'settings':
         return <SettingsPage />;
+      case 'quantum-inspired':
+        return <QuantumInspiredPage />;
       case 'PostQuantum':
         return <PostQuantumPage />;
       default:

@@ -48,6 +48,12 @@ check_docker() {
 
 # Build and deploy
 deploy() {
+    print_status "Building frontend application..."
+    pushd frontend > /dev/null
+    npm ci --silent
+    npm run build --silent
+    popd > /dev/null
+
     print_status "Building Osrovnet containers..."
     docker-compose -f docker-compose.yml build
     

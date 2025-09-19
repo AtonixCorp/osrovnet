@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,4 +30,6 @@ urlpatterns = [
     path('api/', include('analytics.urls')),
     path('api/', include('advanced_analytics.urls')),
     path('api/', include('security_analytics.urls')),
+    # Catch-all: serve the frontend single-page app index.html for non-API routes
+    path('', TemplateView.as_view(template_name='index.html'), name='spa-root'),
 ]
