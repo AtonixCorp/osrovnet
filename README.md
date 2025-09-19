@@ -19,11 +19,12 @@
 - Threat landscape visualization
 
 ### 🏗️ Infrastructure Resilience
-- Infrastructure health monitoring
-- Automated backup and recovery systems
-- High availability configuration
-- Disaster recovery planning
-- Performance optimization
+- **Health Monitoring**: Real-time system and component health tracking
+- **Performance Metrics**: CPU, memory, disk, and network monitoring
+- **Automated Backup**: Scheduled backups with compression and encryption
+- **Disaster Recovery**: DR planning, testing, and execution procedures
+- **Maintenance Management**: Planned maintenance windows and change control
+- **Alerting System**: Configurable alerts with escalation procedures
 
 ## 🛠️ Technology Stack
 
