@@ -29,6 +29,7 @@ import {
 import NetworkMonitoring from './components/NetworkMonitoring';
 import ActivitiesFeed from './components/ActivitiesFeed';
 import AnalyticsPage from './pages/AnalyticsPage';
+import DemoControls from './components/DemoControls';
 
 const theme = createTheme({
   palette: {
@@ -135,6 +136,9 @@ function App() {
             <Typography variant="body1">
               Security analysis features will be implemented here.
             </Typography>
+            <Box mt={2}>
+              <DemoControls />
+            </Box>
           </Box>
         );
       case 'threats':

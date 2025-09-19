@@ -15,15 +15,19 @@ class AnomalyModelViewSet(viewsets.ReadOnlyModelViewSet):
     def detect(self, request, pk=None):
         """Run anomaly detection using the specified model. Expects CSV/JSON payload or dataset reference."""
         model_id = pk
-        # For safety: accept optional data param as list of dicts
-        data = request.data.get('data', None)
+        # For safety: accept optional data param as list of dicts or top-level array
+        if isinstance(request.data, list):
+            data = request.data
+        else:
+            data = request.data.get('data', None)
         if data is None:
             return Response({'error': 'No data provided'}, status=status.HTTP_400_BAD_REQUEST)
         import pandas as pd
         try:
             df = pd.DataFrame(data)
             anomalies = ml_threat_detector.detect_anomalies(int(model_id), df)
-            return Response({'anomalies': anomalies})
+            # Normalise response shape for demo clients
+            return Response({'anomalies': anomalies or []})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

@@ -104,6 +104,13 @@ export const Advanced = {
   tamperLogs: (params = '') => request(`/advanced-analytics/tamper-logs/${params}`),
 };
 
+/* Security Analytics / ML endpoints */
+export const SecurityAnalytics = {
+  detect: (modelId: number, payload: Json) => request(`/models/${modelId}/detect/`, { method: 'POST', body: JSON.stringify(payload) }),
+  train: (payload: Json) => request(`/training/`, { method: 'POST', body: JSON.stringify(payload) }),
+  behaviorAnalyze: (payload: Json) => request(`/behavior/analyze/`, { method: 'POST', body: JSON.stringify(payload) }),
+};
+
 /* SIEM */
 export const SIEM = {
   logSources: (params = '') => request(`/siem/log-sources/${params}`),
@@ -133,4 +140,5 @@ export default {
   Advanced,
   SIEM,
   VulnMgmt,
+  SecurityAnalytics,
 };

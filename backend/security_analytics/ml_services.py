@@ -20,6 +20,7 @@ try:
 except Exception:
     joblib = None
 import logging
+import os
 
 # ML Libraries
 if _ML_AVAILABLE:
@@ -87,15 +88,30 @@ class MLThreatDetector:
                 bootstrap=False
             )
             
-            model.fit(X_train)
+            if _ML_AVAILABLE and IsolationForest is not None:
+                model.fit(X_train)
+            else:
+                # Fallback: compute simple statistics and store them in-memory
+                logger.warning("ML libraries not available: using in-memory fallback for Isolation Forest")
+                # compute column-wise mean/std
+                try:
+                    stats = {
+                        'mean': X_train.mean().to_dict() if hasattr(X_train, 'mean') else {},
+                        'std': X_train.std().to_dict() if hasattr(X_train, 'std') else {}
+                    }
+                except Exception:
+                    stats = {'mean': {}, 'std': {}}
             
             # Evaluate model
             y_pred = model.predict(X_train)
             anomaly_scores = model.decision_function(X_train)
             
             # Save model
-            model_path = f"models/isolation_forest_{dataset_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.joblib"
-            joblib.dump(model, model_path)
+            model_path = ''
+            if _ML_AVAILABLE and joblib is not None:
+                model_path = f"models/isolation_forest_{dataset_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.joblib"
+                os.makedirs(os.path.dirname(model_path), exist_ok=True)
+                joblib.dump(model, model_path)
             
             # Create model record
             ml_model = AnomalyDetectionModel.objects.create(
@@ -113,8 +129,12 @@ class MLThreatDetector:
                 },
                 last_trained=timezone.now()
             )
-            
-            self.models[ml_model.id] = model
+
+            # If we used fallback stats, store them in self.models so detect can use them
+            if not (_ML_AVAILABLE and IsolationForest is not None):
+                self.models[ml_model.id] = {'type': 'fallback_iforest', 'stats': stats, 'contamination': contamination}
+            else:
+                self.models[ml_model.id] = model
             
             logger.info(f"Trained Isolation Forest model {ml_model.id} on {len(X_train)} samples")
             return ml_model
@@ -199,55 +219,120 @@ class MLThreatDetector:
         try:
             ml_model = AnomalyDetectionModel.objects.get(id=model_id)
             
-            # Load model if not in memory
-            if model_id not in self.models:
-                if ml_model.model_type == 'lstm_autoencoder':
-                    self.models[model_id] = tf.keras.models.load_model(ml_model.model_file)
-                else:
-                    self.models[model_id] = joblib.load(ml_model.model_file)
-            
-            model = self.models[model_id]
-            
             # Preprocess data
             X = self._preprocess_data(data, {})
-            
+
             anomalies = []
-            
+
+            # If we have an in-memory fallback model
+            mem_model = self.models.get(model_id)
+            if isinstance(mem_model, dict) and mem_model.get('type') == 'fallback_iforest':
+                stats = mem_model.get('stats', {})
+                # compute z-score per numeric column
+                try:
+                    numeric = X.select_dtypes(include=[np.number]) if hasattr(X, 'select_dtypes') else X
+                    if hasattr(numeric, 'values'):
+                        means = numeric.mean()
+                        stds = numeric.std().replace(0, 1)
+                        z = (numeric - means) / stds
+                        for i in range(len(z)):
+                            row = z.iloc[i] if hasattr(z, 'iloc') else z[i]
+                            max_z = float(row.abs().max()) if hasattr(row, 'abs') else float(max(abs(x) for x in row))
+                            if max_z > 3.0:
+                                anomalies.append({
+                                    'index': i,
+                                    'anomaly_score': max_z,
+                                    'confidence': min(1.0, max_z / 5.0),
+                                    'features': X.iloc[i].to_dict() if hasattr(X, 'iloc') else X[i]
+                                })
+                except Exception as e:
+                    logger.error(f"Fallback detection error: {e}")
+                    return []
+
+                logger.info(f"Fallback detected {len(anomalies)} anomalies using model {model_id}")
+                return anomalies
+
+            # Otherwise, attempt to load persistent model if not loaded
+            if model_id not in self.models:
+                # if model_file is missing or empty, use simple fallback detection
+                if not ml_model.model_file:
+                    # compute z-score fallback directly
+                    try:
+                        numeric = X.select_dtypes(include=[np.number]) if hasattr(X, 'select_dtypes') else X
+                        if hasattr(numeric, 'values'):
+                            means = numeric.mean()
+                            stds = numeric.std().replace(0, 1)
+                            z = (numeric - means) / stds
+                            for i in range(len(z)):
+                                row = z.iloc[i] if hasattr(z, 'iloc') else z[i]
+                                max_z = float(row.abs().max()) if hasattr(row, 'abs') else float(max(abs(x) for x in row))
+                                if max_z > 3.0:
+                                    anomalies.append({
+                                        'index': i,
+                                        'anomaly_score': max_z,
+                                        'confidence': min(1.0, max_z / 5.0),
+                                        'features': X.iloc[i].to_dict() if hasattr(X, 'iloc') else X[i]
+                                    })
+                    except Exception as e:
+                        logger.error(f"Fallback detection error: {e}")
+                        return []
+
+                    logger.info(f"Fallback (no model file) detected {len(anomalies)} anomalies using model {model_id}")
+                    return anomalies
+
+                # Try loading from file
+                try:
+                    if ml_model.model_type == 'lstm_autoencoder':
+                        self.models[model_id] = tf.keras.models.load_model(ml_model.model_file)
+                    else:
+                        self.models[model_id] = joblib.load(ml_model.model_file)
+                except Exception as e:
+                    logger.error(f"Failed to load model file for model {model_id}: {e}")
+                    return []
+
+            model = self.models[model_id]
+
             if ml_model.model_type == 'isolation_forest':
-                predictions = model.predict(X)
-                scores = model.decision_function(X)
-                
-                for i, (pred, score) in enumerate(zip(predictions, scores)):
-                    if pred == -1:  # Anomaly
-                        anomalies.append({
-                            'index': i,
-                            'anomaly_score': float(score),
-                            'confidence': float(abs(score)),
-                            'features': X.iloc[i].to_dict() if hasattr(X, 'iloc') else X[i].tolist()
-                        })
-            
+                try:
+                    predictions = model.predict(X)
+                    scores = model.decision_function(X)
+
+                    for i, (pred, score) in enumerate(zip(predictions, scores)):
+                        if pred == -1:  # Anomaly
+                            anomalies.append({
+                                'index': i,
+                                'anomaly_score': float(score),
+                                'confidence': float(abs(score)),
+                                'features': X.iloc[i].to_dict() if hasattr(X, 'iloc') else X[i].tolist()
+                            })
+                except Exception as e:
+                    logger.error(f"Isolation forest detection failed: {e}")
+
             elif ml_model.model_type == 'lstm_autoencoder':
-                # Create sequences
-                sequence_length = ml_model.hyperparameters.get('sequence_length', 10)
-                X_sequences = self._create_sequences(X, sequence_length)
-                
-                # Predict and calculate reconstruction error
-                predictions = model.predict(X_sequences)
-                mse = np.mean(np.power(X_sequences - predictions, 2), axis=(1, 2))
-                
-                # Use 95th percentile as threshold
-                threshold = np.percentile(mse, 95)
-                
-                for i, error in enumerate(mse):
-                    if error > threshold:
-                        anomalies.append({
-                            'index': i,
-                            'anomaly_score': float(error),
-                            'confidence': float(error / threshold),
-                            'threshold': float(threshold),
-                            'features': X_sequences[i].tolist() if len(X_sequences) > i else []
-                        })
-            
+                try:
+                    # Create sequences
+                    sequence_length = ml_model.hyperparameters.get('sequence_length', 10)
+                    X_sequences = self._create_sequences(X, sequence_length)
+
+                    # Predict and calculate reconstruction error
+                    predictions = model.predict(X_sequences)
+                    mse = np.mean(np.power(X_sequences - predictions, 2), axis=(1, 2))
+
+                    # Use 95th percentile as threshold
+                    threshold = np.percentile(mse, 95)
+
+                    for i, error in enumerate(mse):
+                        if error > threshold:
+                            anomalies.append({
+                                'index': i,
+                                'anomaly_score': float(error),
+                                'confidence': float(error / threshold),
+                                'threshold': float(threshold),
+                                'features': X_sequences[i].tolist() if len(X_sequences) > i else []
+                            })
+                except Exception as e:
+                    logger.error(f"LSTM detection failed: {e}")
+
             logger.info(f"Detected {len(anomalies)} anomalies using model {model_id}")
             return anomalies
             

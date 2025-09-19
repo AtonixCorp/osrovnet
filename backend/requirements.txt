@@ -70,14 +70,14 @@ joblib==1.5.2
 statsmodels==0.14.0
 transformers==4.34.0
 spacy==3.8.0
-gensim==4.2.0
+gensim==4.3.1
 pyod==1.1.3
 
 
 # STIX/TAXII Support
 stix2==3.0.1
 taxii2-client==2.3.0
-# mitreattck-python==2.1.0  # commented out: invalid package name / not found on PyPI; verify and re-add if needed
+
 
 # Vulnerability Management
 python-libnmap==0.7.3
