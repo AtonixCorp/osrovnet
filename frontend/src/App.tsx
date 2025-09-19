@@ -40,6 +40,12 @@ import ReportsAnalyticsPage from './pages/ReportsAnalyticsPage';
 import ComplianceCenterPage from './pages/ComplianceCenterPage';
 import IncidentResponsePage from './pages/IncidentResponsePage';
 import DemoControls from './components/DemoControls';
+import { AuthProvider, useAuth } from './auth/AuthProvider';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 const theme = createTheme({
   palette: {
@@ -55,10 +61,22 @@ const theme = createTheme({
 
 const drawerWidth = 240;
 
-function App() {
+function AppContent() {
   const [selectedSection, setSelectedSection] = useState('dashboard');
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { user } = useAuth();
+
+  // simple hash routing for public pages — keep in state and update on hashchange
+  const [hash, setHash] = useState<string>(
+    typeof window !== 'undefined' ? window.location.hash.replace('#', '') : ''
+  );
+
+  React.useEffect(() => {
+    const onHash = () => setHash(window.location.hash.replace('#', ''));
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -204,87 +222,80 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <Header />
       <Box sx={{ display: 'flex' }}>
-        <AppBar
-          position="fixed"
-          sx={{
-            width: { md: `calc(100% - ${drawerWidth}px)` },
-            ml: { md: `${drawerWidth}px` },
-          }}
-        >
-          <Toolbar>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 2, display: { md: 'none' } }}
+        {user ? (
+          <>
+            <Box
+              component="nav"
+              sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
             >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" noWrap component="div">
-              OSROVNet - Network Security Platform
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        
-        <Box
-          component="nav"
-          sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
-        >
-          <Drawer
-            variant="temporary"
-            open={mobileOpen}
-            onClose={handleDrawerToggle}
-            ModalProps={{
-              keepMounted: true,
-            }}
-            sx={{
-              display: { xs: 'block', md: 'none' },
-              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-            }}
-          >
-            {drawer}
-          </Drawer>
-          <Drawer
-            variant="permanent"
-            sx={{
-              display: { xs: 'none', md: 'block' },
-              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-            }}
-            open
-          >
-            {drawer}
-          </Drawer>
-        </Box>
-        
-        <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              p: 3,
-              width: { md: `calc(100% - ${drawerWidth}px)` },
-            }}
-          >
-          <Toolbar />
-            <Container maxWidth="xl">
-              {selectedSection === 'dashboard' ? (
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={8}>
-                    {renderContent()}
+              <Drawer
+                variant="temporary"
+                open={mobileOpen}
+                onClose={handleDrawerToggle}
+                ModalProps={{
+                  keepMounted: true,
+                }}
+                sx={{
+                  display: { xs: 'block', md: 'none' },
+                  '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                }}
+              >
+                {drawer}
+              </Drawer>
+              <Drawer
+                variant="permanent"
+                sx={{
+                  display: { xs: 'none', md: 'block' },
+                  '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                }}
+                open
+              >
+                {drawer}
+              </Drawer>
+            </Box>
+            <Box
+              component="main"
+              sx={{
+                flexGrow: 1,
+                p: 3,
+                width: { md: `calc(100% - ${drawerWidth}px)` },
+              }}
+            >
+              <Toolbar />
+              <Container maxWidth="xl">
+                {selectedSection === 'dashboard' ? (
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={8}>
+                      {renderContent()}
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <ActivitiesFeed />
+                    </Grid>
                   </Grid>
-                  <Grid item xs={12} md={4}>
-                    <ActivitiesFeed />
-                  </Grid>
-                </Grid>
-              ) : (
-                renderContent()
-              )}
-            </Container>
-        </Box>
+                ) : (
+                  renderContent()
+                )}
+              </Container>
+            </Box>
+          </>
+        ) : (
+          <Container sx={{ mt: 4 }}>
+            {hash === '/login' && <Login />}
+            {hash === '/signup' && <Signup />}
+            {hash === '' && <Home />}
+          </Container>
+        )}
       </Box>
+      <Footer />
     </ThemeProvider>
   );
 }
-
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}

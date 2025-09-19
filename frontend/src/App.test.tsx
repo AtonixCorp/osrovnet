@@ -4,6 +4,6 @@ import App from './App';
 
 test('renders app header', () => {
   render(<App />);
-  const header = screen.getByText(/OSROVNet - Network Security Platform/i);
-  expect(header).toBeInTheDocument();
+  const headers = screen.getAllByText(/Osrovnet – Network Security Platform/i);
+  expect(headers.length).toBeGreaterThan(0);
 });

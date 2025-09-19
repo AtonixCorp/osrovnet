@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     # Third-party apps
     'rest_framework',
     'corsheaders',
+    'rest_framework.authtoken',
     'django_extensions',
     
     # Osrovnet apps

@@ -14,6 +14,11 @@ async function request(path: string, opts: RequestInit = {}) {
   const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
   };
+  // attach token if present
+  try {
+    const token = localStorage.getItem('osrovnet_token_v1');
+    if (token) defaultHeaders['Authorization'] = `Token ${token}`;
+  } catch (e) {}
 
   const init: RequestInit = {
     credentials: 'include',
