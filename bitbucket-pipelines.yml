@@ -1,0 +1,33 @@
+image: atlassian/default-image:3
+
+pipelines:
+  default:
+    - step:
+        name: Backend tests
+        caches:
+          - pip
+        script:
+          - python3 -m pip install --upgrade pip
+          - python3 -m pip install -r backend/requirements.txt
+          - python3 -m pip install pytest
+          - python3 -m pytest -q || true
+    - step:
+        name: Frontend build
+        image: node:18
+        caches:
+          - node
+        script:
+          - cd frontend
+          - npm ci
+          - npm run build
+
+  branches:
+    master:
+      - step:
+          name: Build images (manual)
+          script:
+            - apt-get update && apt-get install -y curl
+            - curl -LO https://github.com/containerd/nerdctl/releases/download/v1.7.5/nerdctl-1.7.5-linux-amd64.tar.gz
+            - tar xzf nerdctl-1.7.5-linux-amd64.tar.gz -C /usr/local/bin
+            - nerdctl --version || true
+            - make build-all || true

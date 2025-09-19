@@ -1,0 +1,74 @@
+
+
+########################
+# Frontend build stage
+########################
+FROM node:18-alpine AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --silent
+COPY frontend/ ./
+RUN npm run build --silent
+
+########################
+# Backend build stage
+########################
+FROM python:3.11-slim AS backend-build
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential gcc git curl ca-certificates libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY backend/requirements.txt ./backend/requirements.txt
+RUN python -m pip install --upgrade pip setuptools wheel
+RUN python -m pip install -r backend/requirements.txt
+
+# Copy backend sources
+COPY backend/ ./backend/
+
+# Copy frontend static build into backend staticfiles
+COPY --from=frontend-build /app/frontend/build ./backend/static
+
+WORKDIR /app/backend
+
+# Collect static files (will create STATIC_ROOT)
+RUN python manage.py collectstatic --noinput || true
+
+########################
+# Final runtime image
+########################
+FROM python:3.11-slim
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpq5 curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy installed python packages from builder
+COPY --from=backend-build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=backend-build /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY backend/ ./backend/
+
+# Copy frontend static
+COPY --from=frontend-build /app/frontend/build ./backend/static
+
+# Copy entrypoint
+COPY docker/entrypoint-root.sh /usr/local/bin/entrypoint-root.sh
+RUN chmod +x /usr/local/bin/entrypoint-root.sh
+
+ENV PATH="/usr/local/bin:$PATH"
+
+WORKDIR /app/backend
+
+EXPOSE 8000
+
+ENTRYPOINT ["/usr/local/bin/entrypoint-root.sh"]
+CMD ["gunicorn", "osrovnet.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
