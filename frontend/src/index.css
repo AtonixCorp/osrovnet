@@ -11,3 +11,38 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Theme variables: default (light) and dark overrides via [data-theme="dark"] */
+:root {
+  --bg: #ffffff;
+  --surface: #f6f9fc;
+  --text-primary: rgba(0,0,0,0.87);
+  --text-secondary: rgba(0,0,0,0.6);
+  --accent: #1976d2;
+  --muted: #6b7280;
+}
+
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --surface: #071022;
+  --text-primary: rgba(255,255,255,0.95);
+  --text-secondary: rgba(255,255,255,0.7);
+  --accent: #90caf9;
+  --muted: #9ca3af;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+}
+
+/* Smooth transition when switching theme */
+html[data-theme], body {
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+/* Utility: use surface color for cards/sections */
+.surface {
+  background-color: var(--surface);
+  color: var(--text-primary);
+}

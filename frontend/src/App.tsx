@@ -70,6 +70,23 @@ const drawerWidth = 240;
 
 function AppContent() {
   const [selectedSection, setSelectedSection] = useState('dashboard');
+  // theme mode persisted in localStorage
+  const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const [mode, setMode] = useState<'light' | 'dark'>(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('osrovnet:theme') : null;
+      return (saved as 'light' | 'dark') || (prefersDark ? 'dark' : 'light');
+    } catch (e) {
+      return prefersDark ? 'dark' : 'light';
+    }
+  });
+  const toggleMode = () => {
+    setMode((m) => {
+      const next = m === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem('osrovnet:theme', next); } catch (e) {}
+      return next;
+    });
+  };
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user } = useAuth();
@@ -84,6 +101,46 @@ function AppContent() {
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
+
+  // When an authenticated user navigates using the hash (e.g. from public pages),
+  // map known internal hashes to the sidebar selection so the correct view opens.
+  React.useEffect(() => {
+    if (!user) return;
+    if (!hash) return;
+    // map some useful hashes to internal section ids
+    const map: Record<string, string> = {
+      '/dashboard': 'dashboard',
+      '/overview': 'overview',
+      '/network-targets': 'network-targets',
+      '/scan-engine': 'scan-engine',
+      '/monitoring': 'monitoring',
+      '/threat-intel': 'threat-intel',
+      '/telemetry': 'telemetry',
+      '/anomaly': 'anomaly',
+      '/reports': 'reports',
+      '/compliance': 'compliance',
+      '/incident': 'incident',
+      '/analytics': 'analytics',
+      '/ssh': 'ssh',
+      '/terminal': 'terminal',
+      '/api': 'api',
+      '/settings': 'settings',
+    };
+    if (map[hash]) {
+      setSelectedSection(map[hash]);
+    }
+  }, [hash, user]);
+
+  // keep document data-theme in sync so global CSS variables take effect
+  React.useEffect(() => {
+    try {
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', mode);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [mode]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -235,10 +292,15 @@ function AppContent() {
     }
   };
 
+  const activeTheme = React.useMemo(() => createTheme({
+    ...theme,
+    palette: { ...theme.palette, mode }
+  }), [mode]);
+
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={activeTheme}>
       <CssBaseline />
-      <Header />
+      <Header mode={mode} toggleMode={toggleMode} />
       <Box sx={{ display: 'flex' }}>
         {user ? (
           <>

@@ -15,6 +15,8 @@ import {
   useTheme,
   Link as MuiLink,
 } from '@mui/material';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useAuth } from '../auth/AuthProvider';
 import './Header.css';
@@ -63,7 +65,7 @@ const headerStyles = {
   },
 };
 
-export default function Header() {
+export default function Header({ mode, toggleMode }: { mode?: 'light' | 'dark'; toggleMode?: () => void }) {
   const { user, logout } = useAuth();
   const theme = useTheme();
   const isSmall = useMediaQuery(theme.breakpoints.down('md'));
@@ -113,23 +115,29 @@ export default function Header() {
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {!isSmall ? (
-            user ? (
-              <>
-                <Button color="inherit" href="#/">Home</Button>
-                <Button color="inherit" onClick={() => logout()}>
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button color="inherit" href="#/login">
-                  Login
-                </Button>
-                <Button color="inherit" href="#/signup">
-                  Sign up
-                </Button>
-              </>
-            )
+            <>
+              {/* Theme toggle is visible to everyone */}
+              <IconButton color="inherit" onClick={() => toggleMode && toggleMode()} aria-label="Toggle theme">
+                {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+              </IconButton>
+              {user ? (
+                <>
+                  <Button color="inherit" href="#/">Home</Button>
+                  <Button color="inherit" onClick={() => logout()}>
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button color="inherit" href="#/login">
+                    Login
+                  </Button>
+                  <Button color="inherit" href="#/signup">
+                    Sign up
+                  </Button>
+                </>
+              )}
+            </>
           ) : (
             <>
               <IconButton color="inherit" onClick={toggleDrawer(true)} edge="end">
@@ -151,6 +159,11 @@ export default function Header() {
                   </List>
                   <Divider />
                   <List>
+                    {mode && toggleMode && (
+                      <ListItemButton onClick={() => toggleMode && toggleMode()}>
+                        <ListItemText primary={mode === 'dark' ? 'Switch to light' : 'Switch to dark'} />
+                      </ListItemButton>
+                    )}
                     {user ? (
                       <ListItemButton onClick={() => logout()}>
                         <ListItemText primary="Logout" />

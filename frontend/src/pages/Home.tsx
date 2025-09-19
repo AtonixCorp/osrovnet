@@ -1,8 +1,22 @@
 import React from 'react';
+import { useAuth } from '../auth/AuthProvider';
 import './HomePage.css'; // Optional: for custom styling
 
 const HomePage = () => {
   // Home page is informational; newsletter handled in global Footer component.
+
+  const { user } = useAuth();
+
+  const handleLaunch = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (user) {
+      // go to dashboard (internal view)
+      window.location.hash = '/dashboard';
+    } else {
+      // redirect visitors to signup
+      window.location.hash = '/signup';
+    }
+  };
 
   return (
     <div className="homepage-container">
@@ -12,7 +26,7 @@ const HomePage = () => {
           AtonixCorp’s flagship solution for sovereign network defense, threat intelligence,
           and infrastructure resilience. Built for mission-critical environments and autonomous systems.
         </p>
-        <a href="#/" className="cta-button">Launch Dashboard</a>
+  <a href="#/" onClick={handleLaunch} className="cta-button">Launch Dashboard</a>
       </header>
 
       <section className="features-section">
