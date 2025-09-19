@@ -1,190 +1,253 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  ThemeProvider,
+  createTheme,
+  CssBaseline,
   AppBar,
   Toolbar,
   Typography,
-  Container,
-  Card,
-  CardContent,
   Box,
-  CssBaseline,
-  ThemeProvider,
-  createTheme,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Container,
+  IconButton,
+  useMediaQuery
 } from '@mui/material';
 import {
+  Dashboard,
   Security,
   NetworkCheck,
-  TrendingUp,
-  Warning,
+  Assessment,
+  Settings,
+  Menu as MenuIcon,
+  TrendingUp
 } from '@mui/icons-material';
-import './App.css';
+import NetworkMonitoring from './components/NetworkMonitoring';
 
-// Dark theme for cybersecurity aesthetic
-const darkTheme = createTheme({
+const theme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     primary: {
-      main: '#00ff41', // Matrix green
+      main: '#1976d2',
     },
     secondary: {
-      main: '#ff4444', // Alert red
+      main: '#dc004e',
     },
-    background: {
-      default: '#0a0a0a',
-      paper: '#1a1a1a',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto Mono", "Courier New", monospace',
   },
 });
 
-const StatCard: React.FC<{
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  color: string;
-}> = ({ title, value, icon, color }) => (
-  <Card sx={{ height: '100%', bgcolor: 'background.paper' }}>
-    <CardContent>
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Box>
-          <Typography variant="h6" component="div" gutterBottom>
-            {title}
-          </Typography>
-          <Typography variant="h4" component="div" sx={{ color }}>
-            {value}
-          </Typography>
-        </Box>
-        <Box sx={{ color }}>{icon}</Box>
-      </Box>
-    </CardContent>
-  </Card>
-);
+const drawerWidth = 240;
 
 function App() {
-  return (
-    <ThemeProvider theme={darkTheme}>
-      <CssBaseline />
-      <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static" sx={{ bgcolor: 'background.paper' }}>
-          <Toolbar>
-            <Security sx={{ mr: 2, color: 'primary.main' }} />
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Osrovnet - Network Security Platform
+  const [selectedSection, setSelectedSection] = useState('dashboard');
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
+    { id: 'monitoring', label: 'Network Monitoring', icon: <NetworkCheck /> },
+    { id: 'security', label: 'Security Analysis', icon: <Security /> },
+    { id: 'threats', label: 'Threat Intelligence', icon: <Assessment /> },
+    { id: 'analytics', label: 'Analytics', icon: <TrendingUp /> },
+    { id: 'settings', label: 'Settings', icon: <Settings /> },
+  ];
+
+  const drawer = (
+    <div>
+      <Toolbar>
+        <Typography variant="h6" noWrap component="div">
+          OSROVNet
+        </Typography>
+      </Toolbar>
+      <List>
+        {menuItems.map((item) => (
+          <ListItem
+            key={item.id}
+            onClick={() => {
+              setSelectedSection(item.id);
+              if (isMobile) {
+                setMobileOpen(false);
+              }
+            }}
+            sx={{
+              cursor: 'pointer',
+              backgroundColor: selectedSection === item.id ? 'rgba(25, 118, 210, 0.12)' : 'transparent',
+            }}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.label} />
+          </ListItem>
+        ))}
+      </List>
+    </div>
+  );
+
+  const renderContent = () => {
+    switch (selectedSection) {
+      case 'dashboard':
+        return (
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Dashboard
             </Typography>
-            <Typography variant="subtitle1" sx={{ color: 'text.secondary' }}>
-              AtonixCorp
+            <Typography variant="body1">
+              Welcome to OSROVNet - Your Network Security Monitoring Platform
+            </Typography>
+            <Box mt={4}>
+              <Typography variant="h6" gutterBottom>
+                Quick Actions
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Use the navigation menu to access different sections:
+              </Typography>
+              <List dense sx={{ mt: 1 }}>
+                <ListItem>
+                  <ListItemText primary="Network Monitoring - Real-time network scanning and analysis" />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="Security Analysis - Vulnerability assessment and reporting" />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="Threat Intelligence - Advanced threat detection and analysis" />
+                </ListItem>
+              </List>
+            </Box>
+          </Box>
+        );
+      case 'monitoring':
+        return <NetworkMonitoring />;
+      case 'security':
+        return (
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Security Analysis
+            </Typography>
+            <Typography variant="body1">
+              Security analysis features will be implemented here.
+            </Typography>
+          </Box>
+        );
+      case 'threats':
+        return (
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Threat Intelligence
+            </Typography>
+            <Typography variant="body1">
+              Threat intelligence features will be implemented here.
+            </Typography>
+          </Box>
+        );
+      case 'analytics':
+        return (
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Analytics
+            </Typography>
+            <Typography variant="body1">
+              Analytics and reporting features will be implemented here.
+            </Typography>
+          </Box>
+        );
+      case 'settings':
+        return (
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Settings
+            </Typography>
+            <Typography variant="body1">
+              Application settings will be implemented here.
+            </Typography>
+          </Box>
+        );
+      default:
+        return (
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Page Not Found
+            </Typography>
+          </Box>
+        );
+    }
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: 'flex' }}>
+        <AppBar
+          position="fixed"
+          sx={{
+            width: { md: `calc(100% - ${drawerWidth}px)` },
+            ml: { md: `${drawerWidth}px` },
+          }}
+        >
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { md: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" noWrap component="div">
+              OSROVNet - Network Security Platform
             </Typography>
           </Toolbar>
         </AppBar>
-
-        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-          <Typography variant="h4" gutterBottom sx={{ color: 'primary.main' }}>
-            Network Security Dashboard
-          </Typography>
-          <Typography variant="subtitle1" gutterBottom sx={{ mb: 4 }}>
-            Advanced threat intelligence and resilient infrastructure monitoring
-          </Typography>
-
-          {/* Statistics Cards */}
-          <Box
+        
+        <Box
+          component="nav"
+          sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+        >
+          <Drawer
+            variant="temporary"
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            ModalProps={{
+              keepMounted: true,
+            }}
             sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: '1fr 1fr',
-                md: '1fr 1fr 1fr 1fr',
-              },
-              gap: 3,
-              mb: 3,
+              display: { xs: 'block', md: 'none' },
+              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
             }}
           >
-            <StatCard
-              title="Network Status"
-              value="SECURE"
-              icon={<NetworkCheck sx={{ fontSize: 40 }} />}
-              color="#00ff41"
-            />
-            <StatCard
-              title="Active Threats"
-              value="3"
-              icon={<Warning sx={{ fontSize: 40 }} />}
-              color="#ff4444"
-            />
-            <StatCard
-              title="Security Score"
-              value="94%"
-              icon={<Security sx={{ fontSize: 40 }} />}
-              color="#00ff41"
-            />
-            <StatCard
-              title="Uptime"
-              value="99.9%"
-              icon={<TrendingUp sx={{ fontSize: 40 }} />}
-              color="#00ff41"
-            />
-          </Box>
-
-          {/* Main Dashboard Content */}
-          <Box
+            {drawer}
+          </Drawer>
+          <Drawer
+            variant="permanent"
             sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
-              gap: 3,
+              display: { xs: 'none', md: 'block' },
+              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
             }}
+            open
           >
-            <Card sx={{ height: 400, bgcolor: 'background.paper' }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Network Traffic Analysis
-                </Typography>
-                <Box
-                  sx={{
-                    height: 300,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px dashed',
-                    borderColor: 'primary.main',
-                    borderRadius: 1,
-                  }}
-                >
-                  <Typography variant="h6" sx={{ color: 'text.secondary' }}>
-                    Real-time Network Monitoring
-                    <br />
-                    Coming Soon...
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-
-            <Card sx={{ height: 400, bgcolor: 'background.paper' }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Threat Intelligence Feed
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    • Suspicious IP detected: 192.168.1.100
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    • Port scan attempt blocked
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    • Malware signature updated
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    • Firewall rules optimized
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'primary.main' }}>
-                    • System integrity verified ✓
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Box>
-        </Container>
+            {drawer}
+          </Drawer>
+        </Box>
+        
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: 3,
+            width: { md: `calc(100% - ${drawerWidth}px)` },
+          }}
+        >
+          <Toolbar />
+          <Container maxWidth="xl">
+            {renderContent()}
+          </Container>
+        </Box>
       </Box>
     </ThemeProvider>
   );
