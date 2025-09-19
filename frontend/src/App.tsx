@@ -3,7 +3,6 @@ import {
   ThemeProvider,
   createTheme,
   CssBaseline,
-  AppBar,
   Toolbar,
   Typography,
   Box,
@@ -14,7 +13,6 @@ import {
   ListItemIcon,
   ListItemText,
   Container,
-  IconButton,
   useMediaQuery
 } from '@mui/material';
 import {
@@ -23,7 +21,6 @@ import {
   NetworkCheck,
   Assessment,
   Settings,
-  Menu as MenuIcon,
   TrendingUp
 } from '@mui/icons-material';
 import NetworkMonitoring from './components/NetworkMonitoring';
@@ -52,6 +49,7 @@ import Documentation from './pages/Documentation';
 import Community from './pages/Community';
 import Blog from './pages/Blog';
 import Vulnerabilities from './pages/Vulnerabilities';
+import SecurityPage from './pages/Security';
 
 const theme = createTheme({
   palette: {
@@ -295,6 +293,7 @@ function AppContent() {
             {hash === '/support' && <Support />}
             {hash === '/documentation' && <Documentation />}
             {hash === '/community' && <Community />}
+            {hash === '/security' && <SecurityPage />}
             {hash === '/blog' && <Blog />}
             {hash === '/vulnerabilities' && <Vulnerabilities />}
           </Container>
