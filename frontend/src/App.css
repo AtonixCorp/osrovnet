@@ -54,3 +54,65 @@
     transform: rotate(360deg);
   }
 }
+
+/* Global typography and layout to match HomePage.css */
+:root {
+  --max-content-width: 1200px;
+  --page-gutter: 24px;
+  --brand-accent: #00bfa5;
+  --brand-dark: #0f1c2e;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f7fafc; /* subtle neutral */
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* App container used by top-level pages */
+.app-container {
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  padding: calc(var(--page-gutter) * 1.5);
+  box-sizing: border-box;
+}
+
+/* Full-width public pages (used on Home, Support, Documentation, etc.) */
+.public-page {
+  width: 100%;
+  max-width: none;
+  padding-left: var(--page-gutter);
+  padding-right: var(--page-gutter);
+}
+
+/* Page sections */
+.section { margin-bottom: 32px; }
+.section-title { font-size: 1.5rem; margin: 0 0 12px 0; color: var(--brand-dark); }
+
+/* Footer spacing and small helpers */
+.site-footer { margin-top: 48px; padding: 28px 0; color: #6b7280; font-size: 0.9rem; }
+.site-footer a { color: var(--brand-accent); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+
+/* Utility classes */
+.flex { display: flex; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.muted { color: #6b7280; }
+
+/* Responsive tweaks */
+@media (max-width: 900px) {
+  .app-container { padding: 18px; }
+  .hero-section { padding: 40px 18px; }
+}
+
+@media (max-width: 480px) {
+  .hero-section h1 { font-size: 1.8rem; }
+}
+
