@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: osrovnet_postgres_dev
+    environment:
+      POSTGRES_DB: osrovnet_dev
+      POSTGRES_USER: osrovnet_user
+      POSTGRES_PASSWORD: osrovnet_password
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - osrovnet_dev_network
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: osrovnet_redis_dev
+    ports:
+      - "6379:6379"
+    networks:
+      - osrovnet_dev_network
+
+  # Django Backend (Development)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: osrovnet_backend_dev
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=dev-secret-key-change-me-in-production-12345678901234567890
+      - DATABASE_URL=postgresql://osrovnet_user:osrovnet_password@postgres:5432/osrovnet_dev
+      - REDIS_URL=redis://redis:6379/0
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,0.0.0.0
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - osrovnet_dev_network
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  osrovnet_dev_network:
+    driver: bridge

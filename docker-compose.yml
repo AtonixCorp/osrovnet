@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: osrovnet_postgres
+    environment:
+      POSTGRES_DB: osrovnet
+      POSTGRES_USER: osrovnet_user
+      POSTGRES_PASSWORD: osrovnet_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - osrovnet_network
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: osrovnet_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - osrovnet_network
+
+  # Django Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: osrovnet_backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:8000 osrovnet.wsgi:application"
+    volumes:
+      - ./backend:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=your-production-secret-key-here
+      - DATABASE_URL=postgresql://osrovnet_user:osrovnet_password@postgres:5432/osrovnet
+      - REDIS_URL=redis://redis:6379/0
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - osrovnet_network
+
+  # Celery Worker
+  celery:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: osrovnet_celery
+    command: celery -A osrovnet worker -l info
+    volumes:
+      - ./backend:/app
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=your-production-secret-key-here
+      - DATABASE_URL=postgresql://osrovnet_user:osrovnet_password@postgres:5432/osrovnet
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - osrovnet_network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: osrovnet_frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - osrovnet_network
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+
+networks:
+  osrovnet_network:
+    driver: bridge
