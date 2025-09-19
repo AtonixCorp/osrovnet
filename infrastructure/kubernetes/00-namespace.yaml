@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: osrovnet
+  labels:
+    app.kubernetes.io/name: osrovnet
+    app.kubernetes.io/instance: osrovnet-platform
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: security-platform
+    app.kubernetes.io/part-of: atonixcorp-security
+    app.kubernetes.io/managed-by: kubernetes
+  annotations:
+    description: "Osrovnet Network Security Platform - AtonixCorp"
+    security.atonixcorp.com/classification: "mission-critical"
+    compliance.atonixcorp.com/framework: "nist-csf"

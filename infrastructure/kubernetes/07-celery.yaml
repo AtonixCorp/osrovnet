@@ -1,0 +1,231 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: osrovnet-celery-worker
+  namespace: osrovnet
+  labels:
+    app.kubernetes.io/name: osrovnet-celery
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: osrovnet
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: osrovnet-celery
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: osrovnet-celery
+        app.kubernetes.io/component: worker
+    spec:
+      imagePullSecrets:
+      - name: osrovnet-registry
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: celery-worker
+        image: registry.atonixcorp.com/osrovnet/backend:latest
+        imagePullPolicy: Always
+        command: ['celery', '-A', 'osrovnet', 'worker', '-l', 'info', '--concurrency=4']
+        env:
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: osrovnet-secrets
+              key: SECRET_KEY
+        - name: DATABASE_URL
+          value: "postgresql://osrovnet_user:$(DATABASE_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)"
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: osrovnet-secrets
+              key: DATABASE_PASSWORD
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: DATABASE_HOST
+        - name: DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: DATABASE_PORT
+        - name: DATABASE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: DATABASE_NAME
+        - name: REDIS_URL
+          value: "redis://:$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)/$(REDIS_DB)"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: osrovnet-secrets
+              key: REDIS_PASSWORD
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: REDIS_PORT
+        - name: REDIS_DB
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: REDIS_DB
+        - name: SHODAN_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: osrovnet-secrets
+              key: SHODAN_API_KEY
+        - name: MAXMIND_LICENSE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: osrovnet-secrets
+              key: MAXMIND_LICENSE_KEY
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: data
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "celery -A osrovnet inspect ping"
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: osrovnet-logs-pvc
+      - name: data
+        persistentVolumeClaim:
+          claimName: osrovnet-data-pvc
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: osrovnet-celery-beat
+  namespace: osrovnet
+  labels:
+    app.kubernetes.io/name: osrovnet-celery
+    app.kubernetes.io/component: scheduler
+    app.kubernetes.io/part-of: osrovnet
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: osrovnet-celery
+      app.kubernetes.io/component: scheduler
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: osrovnet-celery
+        app.kubernetes.io/component: scheduler
+    spec:
+      imagePullSecrets:
+      - name: osrovnet-registry
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: celery-beat
+        image: registry.atonixcorp.com/osrovnet/backend:latest
+        imagePullPolicy: Always
+        command: ['celery', '-A', 'osrovnet', 'beat', '-l', 'info', '--scheduler', 'django_celery_beat.schedulers:DatabaseScheduler']
+        env:
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: osrovnet-secrets
+              key: SECRET_KEY
+        - name: DATABASE_URL
+          value: "postgresql://osrovnet_user:$(DATABASE_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)"
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: osrovnet-secrets
+              key: DATABASE_PASSWORD
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: DATABASE_HOST
+        - name: DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: DATABASE_PORT
+        - name: DATABASE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: DATABASE_NAME
+        - name: REDIS_URL
+          value: "redis://:$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)/$(REDIS_DB)"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: osrovnet-secrets
+              key: REDIS_PASSWORD
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: REDIS_PORT
+        - name: REDIS_DB
+          valueFrom:
+            configMapKeyRef:
+              name: osrovnet-config
+              key: REDIS_DB
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: data
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: osrovnet-logs-pvc
+      - name: data
+        persistentVolumeClaim:
+          claimName: osrovnet-data-pvc

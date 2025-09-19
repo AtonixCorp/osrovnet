@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: osrovnet-config
+  namespace: osrovnet
+  labels:
+    app.kubernetes.io/name: osrovnet
+    app.kubernetes.io/component: configuration
+data:
+  # Django Settings
+  DEBUG: "false"
+  ALLOWED_HOSTS: "osrovnet.atonixcorp.com,*.osrovnet.atonixcorp.com,localhost"
+  
+  # Database Configuration
+  DATABASE_ENGINE: "django.db.backends.postgresql"
+  DATABASE_NAME: "osrovnet"
+  DATABASE_HOST: "postgres-service"
+  DATABASE_PORT: "5432"
+  
+  # Redis Configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  
+  # Network Security Settings
+  NMAP_TIMEOUT: "300"
+  SCAN_RATE_LIMIT: "10"
+  MAX_CONCURRENT_SCANS: "5"
+  
+  # Threat Intelligence Settings
+  THREAT_DB_UPDATE_INTERVAL: "3600"
+  IOC_RETENTION_DAYS: "90"
+  
+  # Logging Configuration
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+  
+  # CORS Settings
+  CORS_ALLOWED_ORIGINS: "https://osrovnet.atonixcorp.com,https://dashboard.osrovnet.atonixcorp.com"
+  
+  # Security Settings
+  SECURE_SSL_REDIRECT: "true"
+  SECURE_HSTS_SECONDS: "31536000"
+  SECURE_HSTS_INCLUDE_SUBDOMAINS: "true"
+  SECURE_CONTENT_TYPE_NOSNIFF: "true"
+  SECURE_BROWSER_XSS_FILTER: "true"
+  
+  # API Settings
+  API_RATE_LIMIT: "1000/hour"
+  API_BURST_LIMIT: "100/minute"
+  
+  # Monitoring
+  METRICS_ENABLED: "true"
+  HEALTH_CHECK_INTERVAL: "30"
+  
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: osrovnet-frontend-config
+  namespace: osrovnet
+  labels:
+    app.kubernetes.io/name: osrovnet
+    app.kubernetes.io/component: frontend-configuration
+data:
+  REACT_APP_API_URL: "https://api.osrovnet.atonixcorp.com"
+  REACT_APP_WS_URL: "wss://ws.osrovnet.atonixcorp.com"
+  REACT_APP_ENVIRONMENT: "production"
+  REACT_APP_VERSION: "1.0.0"
+  REACT_APP_COMPANY: "AtonixCorp"
+  REACT_APP_PLATFORM_NAME: "Osrovnet"
+  REACT_APP_THEME: "dark"
+  REACT_APP_ANALYTICS_ENABLED: "true"
+  REACT_APP_DEBUG_MODE: "false"

@@ -1,0 +1,30 @@
+apiVersion: v2
+name: osrovnet
+description: AtonixCorp's flagship platform for advanced network security, threat intelligence, and resilient infrastructure design
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+home: https://osrovnet.atonixcorp.com
+sources:
+  - https://github.com/AtonixCorp/osrovnet
+maintainers:
+  - name: AtonixCorp Security Team
+    email: security-team@atonixcorp.com
+keywords:
+  - security
+  - network-security
+  - threat-intelligence
+  - cybersecurity
+  - atonixcorp
+annotations:
+  category: Security
+  licenses: MIT
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: redis
+    version: "18.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled

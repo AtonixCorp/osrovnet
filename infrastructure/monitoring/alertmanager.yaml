@@ -1,0 +1,160 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  config.yml: |-
+    global:
+      smtp_smarthost: 'localhost:587'
+      smtp_from: 'alerts@atonixcorp.com'
+      smtp_auth_username: 'alerts@atonixcorp.com'
+      smtp_auth_password: 'your-email-password'
+
+    route:
+      group_by: ['alertname']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'web.hook'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'critical-alerts'
+      - match:
+          severity: warning
+        receiver: 'warning-alerts'
+
+    receivers:
+    - name: 'web.hook'
+      webhook_configs:
+      - url: 'http://127.0.0.1:5001/'
+
+    - name: 'critical-alerts'
+      email_configs:
+      - to: 'security-team@atonixcorp.com'
+        subject: '🚨 CRITICAL: Osrovnet Security Alert'
+        body: |
+          Alert: {{ .GroupLabels.alertname }}
+          Description: {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
+          Instance: {{ range .Alerts }}{{ .Labels.instance }}{{ end }}
+          Time: {{ range .Alerts }}{{ .StartsAt }}{{ end }}
+      slack_configs:
+      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        channel: '#security-alerts'
+        color: 'danger'
+        title: '🚨 CRITICAL: Osrovnet Security Alert'
+        text: |
+          Alert: {{ .GroupLabels.alertname }}
+          Description: {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
+
+    - name: 'warning-alerts'
+      email_configs:
+      - to: 'ops-team@atonixcorp.com'
+        subject: '⚠️ WARNING: Osrovnet Alert'
+        body: |
+          Alert: {{ .GroupLabels.alertname }}
+          Description: {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
+          Instance: {{ range .Alerts }}{{ .Labels.instance }}{{ end }}
+          Time: {{ range .Alerts }}{{ .StartsAt }}{{ end }}
+      slack_configs:
+      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        channel: '#ops-alerts'
+        color: 'warning'
+        title: '⚠️ WARNING: Osrovnet Alert'
+        text: |
+          Alert: {{ .GroupLabels.alertname }}
+          Description: {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
+
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'dev', 'instance']
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+      - name: alertmanager
+        image: prom/alertmanager:v0.25.0
+        args:
+          - '--config.file=/etc/alertmanager/config.yml'
+          - '--storage.path=/alertmanager'
+          - '--web.external-url=http://alertmanager.osrovnet.atonixcorp.com'
+        ports:
+        - containerPort: 9093
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: alertmanager-config-volume
+          mountPath: /etc/alertmanager
+        - name: alertmanager-storage-volume
+          mountPath: /alertmanager
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9093
+          initialDelaySeconds: 30
+          timeoutSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9093
+          initialDelaySeconds: 30
+          timeoutSeconds: 30
+      volumes:
+      - name: alertmanager-config-volume
+        configMap:
+          defaultMode: 420
+          name: alertmanager-config
+      - name: alertmanager-storage-volume
+        persistentVolumeClaim:
+          claimName: alertmanager-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  selector:
+    app: alertmanager
+  ports:
+  - port: 9093
+    targetPort: 9093
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alertmanager-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: fast-ssd
+  resources:
+    requests:
+      storage: 5Gi

@@ -1,0 +1,225 @@
+# Default values for osrovnet
+# This is a YAML-formatted file.
+
+# Global configuration
+global:
+  imageRegistry: "registry.atonixcorp.com"
+  imagePullSecrets:
+    - name: "osrovnet-registry"
+  storageClass: "fast-ssd"
+
+# Image configuration
+image:
+  backend:
+    repository: osrovnet/backend
+    tag: "latest"
+    pullPolicy: Always
+  frontend:
+    repository: osrovnet/frontend
+    tag: "latest"
+    pullPolicy: Always
+
+# Service configuration
+service:
+  type: ClusterIP
+  backend:
+    port: 8000
+  frontend:
+    port: 80
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: osrovnet.atonixcorp.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+    - host: api.osrovnet.atonixcorp.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: backend
+  tls:
+    - secretName: osrovnet-tls
+      hosts:
+        - osrovnet.atonixcorp.com
+        - api.osrovnet.atonixcorp.com
+
+# Backend configuration
+backend:
+  replicaCount: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  
+  env:
+    DEBUG: "false"
+    ALLOWED_HOSTS: "osrovnet.atonixcorp.com,api.osrovnet.atonixcorp.com"
+    LOG_LEVEL: "INFO"
+    CORS_ALLOWED_ORIGINS: "https://osrovnet.atonixcorp.com"
+  
+  secrets:
+    secretKey: "change-me-in-production"
+    databasePassword: "change-me-in-production"
+    redisPassword: "change-me-in-production"
+    shodanApiKey: ""
+    maxmindLicenseKey: ""
+
+# Frontend configuration
+frontend:
+  replicaCount: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+  
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  
+  env:
+    REACT_APP_API_URL: "https://api.osrovnet.atonixcorp.com"
+    REACT_APP_ENVIRONMENT: "production"
+    REACT_APP_VERSION: "1.0.0"
+
+# Celery configuration
+celery:
+  worker:
+    replicaCount: 2
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+  
+  beat:
+    enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 250m
+        memory: 512Mi
+
+# Database configuration (PostgreSQL)
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "postgres-admin-password"
+    username: "osrovnet_user"
+    password: "osrovnet-database-password"
+    database: "osrovnet"
+  primary:
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+
+# Redis configuration
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "redis-password"
+  master:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+# Security configuration
+security:
+  networkPolicies:
+    enabled: true
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+# Monitoring configuration
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true
+  alertmanager:
+    enabled: true
+
+# Persistence
+persistence:
+  logs:
+    enabled: true
+    size: 50Gi
+    storageClass: "network-storage"
+  data:
+    enabled: true
+    size: 200Gi
+    storageClass: "network-storage"
+
+# Node affinity
+nodeAffinity:
+  enabled: false
+  key: "node-type"
+  value: "compute"
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "osrovnet"
+
+# RBAC
+rbac:
+  create: true
