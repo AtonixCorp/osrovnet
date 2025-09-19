@@ -24,6 +24,8 @@ urlpatterns = [
     path('', include('threat_intelligence.urls')),
     path('', include('infrastructure.urls')),
     path('', include('core.urls')),
+    path('', include('postquantum.urls')),
+    path('', include('quantum_inspired.urls')),
     path('api/', include('analytics.urls')),
     path('api/', include('advanced_analytics.urls')),
     path('api/', include('security_analytics.urls')),

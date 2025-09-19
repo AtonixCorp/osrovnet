@@ -30,6 +30,7 @@ const navItems = [
   { label: 'Security', href: '#/security' },
   { label: 'Blog', href: '#/blog' },
   { label: 'Vulnerability', href: '#/vulnerabilities' },
+  { label: 'Post-Quantum', href: '#/postquantum' },
 ];
 
 // Styles used by the header component. Kept outside the function so they can be

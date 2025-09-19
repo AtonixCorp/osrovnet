@@ -123,6 +123,12 @@ export const SIEM = {
   alerts: (params = '') => request(`/siem/alerts/${params}`),
 };
 
+/* Post-Quantum (PQC) */
+export const PostQuantum = {
+  listAlgorithms: () => request('/postquantum/algorithms/'),
+  generateKeypair: (payload: Json) => request('/postquantum/generate/', { method: 'POST', body: JSON.stringify(payload) }),
+};
+
 /* Vulnerability management */
 export const VulnMgmt = {
   scanners: (params = '') => request(`/vulnerability-management/scanners/${params}`),

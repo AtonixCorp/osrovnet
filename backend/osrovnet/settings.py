@@ -68,6 +68,8 @@ INSTALLED_APPS = [
     'analytics',
     'advanced_analytics',
     'security_analytics',
+    'quantum_inspired',
+    'postquantum',
 ]
 
 MIDDLEWARE = [

@@ -53,6 +53,7 @@ import Community from './pages/Community';
 import Blog from './pages/Blog';
 import Vulnerabilities from './pages/Vulnerabilities';
 import SecurityPage from './pages/Security';
+import PostQuantumPage from './pages/PostQuantum';
 
 const theme = createTheme({
   palette: {
@@ -281,6 +282,8 @@ function AppContent() {
         return <APIPage />;
       case 'settings':
         return <SettingsPage />;
+      case 'PostQuantum':
+        return <PostQuantumPage />;
       default:
         return (
           <Box>

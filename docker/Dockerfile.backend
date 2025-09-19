@@ -1,4 +1,5 @@
 # Osrovnet Backend Dockerfile
+ARG PQC=false
 FROM python:3.11-slim
 
 # Set environment variables
@@ -16,6 +17,16 @@ RUN apt-get update \
         libpq-dev \
         nmap \
     && rm -rf /var/lib/apt/lists/*
+
+# Optional: build and install liboqs + python-oqs when PQC build arg is set
+RUN if [ "${PQC}" = "true" ]; then \
+      apt-get update && apt-get install -y --no-install-recommends git cmake libssl-dev libgmp-dev pkg-config && \
+      git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git /tmp/liboqs && \
+      mkdir -p /tmp/liboqs/build && cd /tmp/liboqs/build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j2 && make install && \
+      # install python-oqs from pip (expects liboqs installed) \
+      pip install --no-cache-dir python-oqs && \
+      rm -rf /tmp/liboqs && apt-get remove -y git cmake pkg-config && apt-get autoremove -y; \
+    fi
 
 # Install Python dependencies
 COPY requirements.txt /app/

@@ -14,7 +14,8 @@ help:
 	@echo "  down              - stop and remove compose services"
 	@echo "  logs              - tail service logs (pass SERVICE=name)"
 	@echo "  ps                - show running containers (nerdctl ps)"
-	@echo "  prune             - remove dangling images and stopped containers"
+ 	@echo "  prune             - remove dangling images and stopped containers"
+ 	@echo "  build-backend-pqc - build backend image with liboqs/python-oqs included (may take long)"
 
 # Use the project's docker-compose files by default
 COMPOSE_FILE ?= docker-compose.dev.yml
@@ -28,6 +29,12 @@ build-backend:
 	@echo "Building backend image: $(BACKEND_IMAGE)"
 	# Use the backend directory as the build context so Dockerfile can COPY requirements.txt and project files
 	nerdctl build -f docker/Dockerfile.backend -t $(BACKEND_IMAGE) ./backend
+
+# Build backend image with PQC libs included (liboqs + python-oqs)
+build-backend-pqc:
+	@echo "Building backend image with PQC: $(BACKEND_IMAGE)-pqc"
+	# set build-arg PQC=true so Dockerfile.backend installs liboqs and python-oqs
+	nerdctl build --build-arg PQC=true -f docker/Dockerfile.backend -t $(BACKEND_IMAGE)-pqc ./backend
 
 # Build frontend image (uses dockerfile in ./docker/Dockerfile.frontend)
 build-frontend:
