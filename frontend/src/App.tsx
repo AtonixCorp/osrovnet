@@ -38,6 +38,7 @@ import ComplianceCenterPage from './pages/ComplianceCenterPage';
 import IncidentResponsePage from './pages/IncidentResponsePage';
 import SSHPage from './pages/SSH';
 import APIPage from './pages/API';
+import TerminalPage from './pages/TerminalPage';
 import DemoControls from './components/DemoControls';
 import { AuthProvider, useAuth } from './auth/AuthProvider';
 import Home from './pages/Home';
@@ -101,6 +102,7 @@ function AppContent() {
     { id: 'incident', label: 'Incident Response', icon: <Security /> },
     { id: 'analytics', label: 'Analytics', icon: <TrendingUp /> },
     { id: 'ssh', label: 'SSH', icon: <NetworkCheck /> },
+  { id: 'terminal', label: 'Terminal', icon: <NetworkCheck /> },
     { id: 'api', label: 'API', icon: <Assessment /> },
     { id: 'settings', label: 'Settings', icon: <Settings /> },
   ];
@@ -216,6 +218,8 @@ function AppContent() {
         return <AnalyticsPage />;
       case 'ssh':
         return <SSHPage />;
+      case 'terminal':
+        return <TerminalPage />;
       case 'api':
         return <APIPage />;
       case 'settings':
