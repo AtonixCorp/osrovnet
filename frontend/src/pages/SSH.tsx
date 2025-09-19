@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Box,
   Typography,
   TextField,
   Button,
@@ -38,6 +39,7 @@ export default function ApiKeyManager() {
   // SSH key fields
   const [publicKey, setPublicKey] = useState('');
   const [privateKey, setPrivateKey] = useState('');
+  const [mode, setMode] = useState<'paste' | 'generate'>('paste');
 
   const handleSaveSsh = async () => {
     if (!publicKey && !privateKey) return;
@@ -75,6 +77,45 @@ export default function ApiKeyManager() {
     setApiKeys((prev) => [...prev, item]);
     setPublicKey('');
     setPrivateKey('');
+  };
+
+  // generate RSA keypair and export PEMs
+  const generateKeyPair = async () => {
+    try {
+      const kp = await window.crypto.subtle.generateKey(
+        {
+          name: 'RSA-PSS',
+          modulusLength: 2048,
+          publicExponent: new Uint8Array([1, 0, 1]),
+          hash: 'SHA-256',
+        },
+        true,
+        ['sign', 'verify']
+      );
+      const priv = await window.crypto.subtle.exportKey('pkcs8', kp.privateKey);
+      const pub = await window.crypto.subtle.exportKey('spki', kp.publicKey);
+
+      const toBase64 = (buf: ArrayBuffer) => {
+        const bytes = new Uint8Array(buf);
+        let bin = '';
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        return window.btoa(bin);
+      };
+
+      const wrapPem = (b64: string, label: string) => {
+        const lines = b64.match(/.{1,64}/g) || [];
+        return `-----BEGIN ${label}-----\n${lines.join('\n')}\n-----END ${label}-----\n`;
+      };
+
+      const privPem = wrapPem(toBase64(priv), 'PRIVATE KEY');
+      const pubPem = wrapPem(toBase64(pub), 'PUBLIC KEY');
+
+      setPrivateKey(privPem);
+      setPublicKey(pubPem);
+      setMode('paste');
+    } catch (e) {
+      console.error('Key generation failed', e);
+    }
   };
 
   const confirmGenerate = () => {
@@ -169,6 +210,13 @@ export default function ApiKeyManager() {
       </Typography>
 
       <Typography variant="h6" sx={{ mt: 2 }}>SSH Keys</Typography>
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1 }}>
+        <Button variant={mode === 'paste' ? 'contained' : 'outlined'} onClick={() => setMode('paste')}>Paste</Button>
+        <Button variant={mode === 'generate' ? 'contained' : 'outlined'} onClick={() => setMode('generate')}>Generate</Button>
+        {mode === 'generate' && (
+          <Button variant="outlined" onClick={generateKeyPair}>Generate Keys</Button>
+        )}
+      </Box>
       <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>Paste your public and/or private SSH keys below and click Save.</Typography>
       <TextField
         label="Public Key"
