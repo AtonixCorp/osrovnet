@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -6,10 +6,54 @@ import {
   Paper,
   Button,
   Divider,
-  TextField
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
+import api from '../api/osrovnetApi';
 
 export default function ReportsAnalyticsPage() {
+  const [format, setFormat] = useState<string>('json');
+  const [since, setSince] = useState<string>('');
+  const [until, setUntil] = useState<string>('');
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewData, setPreviewData] = useState<any>(null);
+
+  const handleGenerate = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.set('format', format);
+      if (since) params.set('since', since);
+      if (until) params.set('until', until);
+
+      const url = `/api/analytics/reports/generate/?${params.toString()}`;
+      if (format === 'csv') {
+        const resp = await fetch(url, { credentials: 'include' });
+        const blob = await resp.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'osrovnet-report.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        return;
+      }
+
+      const resp = await fetch(url, { credentials: 'include' });
+      const data = await resp.json();
+      setPreviewData(data);
+      setPreviewOpen(true);
+    } catch (e) {
+      console.error('generate report error', e);
+      alert('Failed to generate report');
+    }
+  };
+
   return (
     <Box sx={{ p: 4, backgroundColor: '#f4f6f8', minHeight: '100vh' }}>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: '#1a237e' }}>
@@ -29,7 +73,38 @@ export default function ReportsAnalyticsPage() {
             <Typography variant="body2" sx={{ mt: 1, color: '#666' }}>
               Create on-demand reports for scan results, threat activity, and system health. Choose formats like PDF, CSV, or JSON.
             </Typography>
-            <Button variant="contained" sx={{ mt: 2 }} color="success">Generate</Button>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 2 }}>
+              <FormControl size="small">
+                <InputLabel id="format-label">Format</InputLabel>
+                <Select
+                  labelId="format-label"
+                  value={format}
+                  label="Format"
+                  onChange={(e) => setFormat(e.target.value)}
+                  sx={{ width: 120 }}
+                >
+                  <MenuItem value="json">JSON</MenuItem>
+                  <MenuItem value="csv">CSV</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                label="Since"
+                type="datetime-local"
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                value={since}
+                onChange={(e) => setSince(e.target.value)}
+              />
+              <TextField
+                label="Until"
+                type="datetime-local"
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                value={until}
+                onChange={(e) => setUntil(e.target.value)}
+              />
+              <Button variant="contained" sx={{ mt: 0 }} color="success" onClick={handleGenerate}>Generate</Button>
+            </Box>
           </Paper>
         </Grid>
 
@@ -72,6 +147,16 @@ export default function ReportsAnalyticsPage() {
           </Paper>
         </Grid>
       </Grid>
+
+        <Dialog open={previewOpen} fullWidth maxWidth="lg" onClose={() => setPreviewOpen(false)}>
+          <DialogTitle>Report Preview (JSON)</DialogTitle>
+          <DialogContent>
+            <pre style={{ maxHeight: '60vh', overflow: 'auto' }}>{previewData ? JSON.stringify(previewData, null, 2) : 'No data'}</pre>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPreviewOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
     </Box>
   );
 }

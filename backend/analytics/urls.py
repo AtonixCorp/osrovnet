@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import MetricViewSet, EventViewSet, ReportDefinitionViewSet, ScheduledReportViewSet
+from .views import generate_report
 
 router = DefaultRouter()
 router.register(r'metrics', MetricViewSet, basename='metric')
@@ -10,4 +11,5 @@ router.register(r'scheduled-reports', ScheduledReportViewSet)
 
 urlpatterns = [
     path('analytics/', include(router.urls)),
+    path('analytics/reports/generate/', generate_report, name='generate-report'),
 ]
