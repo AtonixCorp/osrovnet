@@ -16,7 +16,6 @@ import {
   DialogContent,
   DialogActions
 } from '@mui/material';
-import api from '../api/osrovnetApi';
 
 export default function ReportsAnalyticsPage() {
   const [format, setFormat] = useState<string>('json');

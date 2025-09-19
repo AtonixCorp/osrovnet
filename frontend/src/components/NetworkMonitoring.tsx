@@ -104,6 +104,11 @@ const NetworkMonitoring: React.FC = () => {
     ports: '1-1000',
     name: ''
   });
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [portScanTarget, setPortScanTarget] = useState('');
+  const [portScanPorts, setPortScanPorts] = useState('1-1000');
+  const [wifiScanInterface, setWifiScanInterface] = useState('wlan0');
+  const [dnsScanTarget, setDnsScanTarget] = useState('');
   const [scanDialogOpen, setScanDialogOpen] = useState(false);
   const [activeScanId, setActiveScanId] = useState<number | undefined>(undefined);
 
@@ -208,6 +213,13 @@ const NetworkMonitoring: React.FC = () => {
             sx={{ mr: 1 }}
           >
             Quick Scan
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => setAdvancedOpen(!advancedOpen)}
+            sx={{ mr: 1 }}
+          >
+            Advanced Scans
           </Button>
           <Button
             variant="outlined"
@@ -500,6 +512,119 @@ const NetworkMonitoring: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Advanced Scans Inline Panel */}
+      {advancedOpen && (
+        <Box sx={{ mt: 3, mb: 3 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">Advanced Scans</Typography>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+                {/* Port Scan */}
+                <Box sx={{ minWidth: 260 }}>
+                  <Typography variant="subtitle2">Port Scan</Typography>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Target (IP/Range/Domain)"
+                    value={portScanTarget}
+                    onChange={(e) => setPortScanTarget(e.target.value)}
+                    sx={{ mt: 1, mb: 1 }}
+                    placeholder="192.168.1.1 or 10.0.0.0/24"
+                  />
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Ports"
+                    value={portScanPorts}
+                    onChange={(e) => setPortScanPorts(e.target.value)}
+                    placeholder="1-1000 or 22,80,443"
+                  />
+                  <Button
+                    variant="contained"
+                    sx={{ mt: 1 }}
+                    onClick={async () => {
+                      try {
+                        await api.QuickScan({ target: portScanTarget, scan_type: 'port', ports: portScanPorts });
+                        setPortScanTarget('');
+                        setPortScanPorts('1-1000');
+                        setTimeout(fetchData, 1000);
+                      } catch (e) {
+                        console.error('port scan error', e);
+                        setError('Failed to start port scan');
+                      }
+                    }}
+                  >
+                    Start Port Scan
+                  </Button>
+                </Box>
+
+                {/* WiFi Scan */}
+                <Box sx={{ minWidth: 260 }}>
+                  <Typography variant="subtitle2">WiFi Scan</Typography>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Interface"
+                    value={wifiScanInterface}
+                    onChange={(e) => setWifiScanInterface(e.target.value)}
+                    sx={{ mt: 1, mb: 1 }}
+                    placeholder="wlan0"
+                  />
+                  <Typography variant="caption" color="textSecondary">Performs passive WiFi discovery and signal mapping (requires agent support).</Typography>
+                  <Button
+                    variant="contained"
+                    sx={{ mt: 1 }}
+                    onClick={async () => {
+                      try {
+                        await api.QuickScan({ interface: wifiScanInterface, scan_type: 'wifi' });
+                        setWifiScanInterface('wlan0');
+                        setTimeout(fetchData, 1000);
+                      } catch (e) {
+                        console.error('wifi scan error', e);
+                        setError('Failed to start wifi scan');
+                      }
+                    }}
+                  >
+                    Start WiFi Scan
+                  </Button>
+                </Box>
+
+                {/* DNS Scan */}
+                <Box sx={{ minWidth: 260 }}>
+                  <Typography variant="subtitle2">DNS Enumeration</Typography>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Domain"
+                    value={dnsScanTarget}
+                    onChange={(e) => setDnsScanTarget(e.target.value)}
+                    sx={{ mt: 1, mb: 1 }}
+                    placeholder="example.com"
+                  />
+                  <Typography variant="caption" color="textSecondary">Run DNS enumeration (NS, MX, zone transfer attempts where allowed).</Typography>
+                  <Button
+                    variant="contained"
+                    sx={{ mt: 1 }}
+                    onClick={async () => {
+                      try {
+                        await api.QuickScan({ domain: dnsScanTarget, scan_type: 'dns' });
+                        setDnsScanTarget('');
+                        setTimeout(fetchData, 1000);
+                      } catch (e) {
+                        console.error('dns scan error', e);
+                        setError('Failed to start dns scan');
+                      }
+                    }}
+                  >
+                    Start DNS Scan
+                  </Button>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
       <ScanResultsDialog open={scanDialogOpen} scanId={activeScanId} onClose={() => { setScanDialogOpen(false); setActiveScanId(undefined); }} />
     </Box>
   );
